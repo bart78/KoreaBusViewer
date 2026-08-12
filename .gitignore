@@ -1,0 +1,22 @@
+# Build artifacts
+.pio/
+node_modules/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Secrets — never commit these
+espidf/src/secret_config.h
+device/config.py
+
+# Vendor demo code (not part of this project)
+espidf/JC3248W535EN/
+
+# Stale backup
+espidf/src_backup/
+
+# Compiled firmware binaries
+firmware/
+*.bin

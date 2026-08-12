@@ -1,0 +1,31 @@
+# Copy this file to config.py and fill in your own values.
+# config.py is gitignored — never commit real credentials.
+WIFI_SSID = "your-wifi-ssid"
+WIFI_PASSWORD = "your-wifi-password"
+
+API_KEY = "your-data-go-kr-service-key"
+
+SIMULATE = 0
+
+STOP_NAME = "GYEONGNAM HONORSVILLE"
+STOP_ARSNO = "07593"
+ST_ID = "206000648"
+
+WANTED_ROUTES = ["32", "73", "310", "340", "4103", "9409", "9507"]
+
+KNOWN_ROUTES = [
+    {"busRouteId": "204000172", "ord": 7, "name": "4103", "kind": "GYEONGGI"},
+    {"busRouteId": "107000005", "ord": 12, "name": "9409", "kind": "GWANGYEONG"},
+    {"busRouteId": "204000059", "ord": 7, "name": "9507", "kind": "GYEONGGI"},
+    {"busRouteId": "204000040", "ord": 44, "name": "340", "kind": "SEONGNAM"},
+]
+
+START_HOUR = 4
+END_HOUR = 22
+
+PEAK_REFRESH = 180
+PEAK_WINDOWS = [(7, 9), (15, 19)]
+PEAK_DAYS = [0, 1, 2, 3, 4]
+
+DAILY_BUDGET = 900
+DISCOVERY_DAILY = 8
