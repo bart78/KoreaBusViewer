@@ -1,4 +1,5 @@
 # 16MB flash, big factory partition
-nvs,      data, nvs,     ,  0x6000,
+# nvs grown to 128KB: buslog needs 60 days x ~2KB/day blobs
+nvs,      data, nvs,     ,  0x20000,
 phy_init, data, phy,     ,  0x1000,
 factory,  app,  factory, ,  0xE00000,
