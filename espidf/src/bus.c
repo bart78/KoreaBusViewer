@@ -257,6 +257,7 @@ static int http_get(const char* url) {
 
 // GBIS (경기버스정보시스템) — primary feed, covers all Gyeonggi routes incl. 32/9409
 static void log_arrival(int route_idx, time_t arrival_ts, int type);
+static int is_holiday(time_t t);
 
 static int fetch_gbis(void) {
     char url[512];
@@ -606,7 +607,10 @@ static void log_arrival(int route_idx, time_t arrival_ts, int type) {
         return;  // day full
     }
     int minute = t.tm_hour * 60 + t.tm_min;
+    // bit 15 flags a public holiday (learner/analysis bucket these days
+    // separately without needing an external calendar)
     uint16_t ev = (uint16_t)((type << 14) | (route_idx << 11) | (minute & 0x7FF));
+    if (is_holiday(arrival_ts)) ev |= (1 << 15);
     blob[len++] = ev & 0xFF;
     blob[len++] = ev >> 8;
     if (nvs_set_blob(log_nvs, key, blob, len) != ESP_OK) {

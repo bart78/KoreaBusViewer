@@ -21,7 +21,10 @@ def load(path):
             continue
         y, m, d = int(key[1:5]), int(key[5:7]), int(key[7:9])
         wd = datetime.date(y, m, d).weekday()  # 0=Mon..6=Sun
-        days.append({'key': key, 'date': datetime.date(y, m, d), 'wd': wd, 'events': decode_events(blob)})
+        evs = decode_events(blob)
+        hol = any(h for _, _, _, h in evs)   # public holiday flag (bit 15)
+        days.append({'key': key, 'date': datetime.date(y, m, d), 'wd': wd,
+                     'hol': hol, 'events': evs})
     return sorted(days, key=lambda x: x['key'])
 
 def match_bus(route_events):
@@ -49,7 +52,7 @@ def match_bus(route_events):
 
 def main(path):
     days = load(path)
-    weekdays = [d for d in days if d['wd'] < 5]
+    weekdays = [d for d in days if d['wd'] < 5 and not d['hol']]
     print(f'Days in NVS: {len(days)} (weekdays: {len(weekdays)})')
     for d in days:
         print(f"  {d['key']} {d['date'].strftime('%a')}: {len(d['events'])} events")
@@ -64,7 +67,7 @@ def main(path):
 
     for d in weekdays:
         by_route = defaultdict(list)
-        for t, r, m in d['events']:
+        for t, r, m, h in d['events']:
             by_route[r].append((t, m))
         for r, evs in by_route.items():
             num = ROUTES[r]

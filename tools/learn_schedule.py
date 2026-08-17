@@ -38,8 +38,8 @@ def dedupe(arrivals, gap=3):
             last = m
     return out
 
-def daytype(date, holidays):
-    if date in holidays:
+def daytype(date, holidays, hol_flag=False):
+    if hol_flag or date in holidays:
         return DAY_WEEKEND
     return DAY_WEEKEND if date.weekday() >= 5 else DAY_WEEKDAY
 
@@ -123,7 +123,10 @@ def load_days(paths):
             if ns != 4 or not key.startswith('d'):
                 continue
             y, m, d = int(key[1:5]), int(key[5:7]), int(key[7:9])
-            days.append({'date': datetime.date(y, m, d), 'events': decode_events(blob)})
+            evs = decode_events(blob)
+            days.append({'date': datetime.date(y, m, d),
+                         'hol': any(h for _, _, _, h in evs),
+                         'events': evs})
     return sorted(days, key=lambda x: x['date'])
 
 def main():
@@ -142,10 +145,10 @@ def main():
     print('=== Learning pass ===')
     for d in days:
         by_route = defaultdict(list)
-        for t, r, m in d['events']:
+        for t, r, m, h in d['events']:
             if t == 1:
                 by_route[r].append(m)
-        dt = daytype(d['date'], holidays)
+        dt = daytype(d['date'], holidays, d['hol'])
         for r, arrivals in by_route.items():
             num = ROUTES[r]
             gated = models[num].learn_day(dt, arrivals, d['date'])

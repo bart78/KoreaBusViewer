@@ -92,14 +92,15 @@ def load_nvs(path):
     return ns_map, out
 
 def decode_events(blob):
-    """2-byte events: type(1)<<14 | route_idx(3)<<11 | minute(11)"""
+    """2-byte events: holiday(1)<<15 | type(1)<<14 | route_idx(3)<<11 | minute(11)"""
     evs = []
     for i in range(0, len(blob) - 1, 2):
         ev = blob[i] | (blob[i + 1] << 8)
+        hol = ev >> 15
         typ = ev >> 14
         route = (ev >> 11) & 0x7
         minute = ev & 0x7FF
-        evs.append((typ, route, minute))
+        evs.append((typ, route, minute, hol))
     return evs
 
 ROUTES = [32, 73, 310, 340, 4103, 9409, 9507]
