@@ -177,6 +177,7 @@ static lv_span_t* env_span[7];
 static lv_obj_t* clock_label;
 static lv_obj_t* route_labels[N_ROWS];
 static lv_obj_t* seats_labels[N_ROWS];
+static lv_obj_t* conf_dots[N_ROWS];
 static lv_obj_t* time1_labels[N_ROWS];
 static lv_obj_t* time2_labels[N_ROWS];
 
@@ -783,7 +784,7 @@ static void ui_build(void) {
         route_labels[i] = lv_label_create(scr);
         lv_obj_set_style_text_color(route_labels[i], lv_color_hex(0xFFD400), 0);
         lv_obj_set_style_text_font(route_labels[i], &lv_font_montserrat_28, 0);
-        lv_obj_set_pos(route_labels[i], 10, y);
+        lv_obj_set_pos(route_labels[i], 12, y);
 
         time1_labels[i] = lv_label_create(scr);
         lv_obj_set_style_text_color(time1_labels[i], lv_color_white(), 0);
@@ -806,6 +807,16 @@ static void ui_build(void) {
         lv_obj_set_style_text_font(seats_labels[i], &lv_font_montserrat_16, 0);
         lv_obj_set_pos(seats_labels[i], 10 + lv_obj_get_width(route_labels[i]) + 4, y + 8);
         lv_label_set_text(seats_labels[i], "");
+
+        // learned-confidence dot: green >80%, yellow 70-80%, red below —
+        // or red whenever the ring cannot answer within the horizon now
+        conf_dots[i] = lv_obj_create(scr);
+        lv_obj_set_size(conf_dots[i], 8, 8);
+        lv_obj_set_style_bg_color(conf_dots[i], lv_color_hex(0x505860), 0);
+        lv_obj_set_style_bg_opa(conf_dots[i], LV_OPA_COVER, 0);
+        lv_obj_set_style_border_width(conf_dots[i], 0, 0);
+        lv_obj_set_style_radius(conf_dots[i], 4, 0);
+        lv_obj_set_pos(conf_dots[i], 0, y + 12);
     }
 }
 
@@ -1128,6 +1139,21 @@ static void set_env_span(int i, const char* txt, lv_color_t col) {
 // subtext line: seats bracket + second-bus "+Xm" — also shown during
 // ARRIVING/JUST LEFT so the next bus stays visible while the row
 // acknowledges the one that just left
+// the feed's second-bus slot occasionally holds a distant bus after losing
+// track of intermediate vehicles (observed 267m on a 16m-headway route).
+// A second bus beyond ~3x the current headway, or past the service end,
+// is not plausible — treat it as "feed has no second bus" and fall back
+// to the learned estimate.
+static int second_plausible(int i, int rem_s) {
+    const row_cfg_t* rc = &ROWS[i];
+    if (!rc->has_sched) return rem_s <= 90 * 60;
+    int we = weekend_p();
+    int hw = we ? rc->hw_weekend : (is_peak_now() ? rc->hw_commute : rc->hw_weekday);
+    int last_at_stop = rc->last_hm + rc->to_stop;
+    if (now_hm() + (rem_s + 59) / 60 > last_at_stop + 15) return 0;
+    return rem_s <= 3 * hw * 60;
+}
+
 static void set_subtext(int i, time_t now) {
     char sub[32] = "";
     if (rows[i].seats >= 0 && show_seats(ROWS[i].number) &&
@@ -1147,13 +1173,21 @@ static void set_subtext(int i, time_t now) {
     if (rows[i].arrtime2 >= 0 && now - rows[i].fetched < 240) {
         int rem2 = rows[i].arrtime2 - (int)(now - rows[i].fetched);
         if (rem2 < 0) rem2 = 0;
-        snprintf(sub, sizeof(sub), "+%dm", (rem2 + 59) / 60);
+        if (second_plausible(i, rem2))
+            snprintf(sub, sizeof(sub), "+%dm", (rem2 + 59) / 60);
     } else if (learner_conf_now(i) >= LEARNED_SUBTEXT_CONF &&
-               learner_next_now(i, &l1, &l2) && l2 > hm) {
+               learner_next_now(i, &l1, &l2) && l2 > hm &&
+               l2 - hm <= 90) {
         snprintf(sub, sizeof(sub), "+%dm", l2 - hm);
         sub_col = lv_color_hex(0x3399FF);
     }
     lv_obj_set_style_text_color(time2_labels[i], sub_col, 0);
+    // "--" only when the main is NOT live: an empty second-bus slot next to
+    // a live arrival is just "the feed reported one bus", an ordinary state.
+    // When the row claims a prediction (or nothing), an unknown next bus is
+    // real information worth showing.
+    if (sub[0] == 0 && !(rows[i].arrtime >= 0 && now - rows[i].fetched < 300))
+        snprintf(sub, sizeof(sub), "--");
     lv_label_set_text(time2_labels[i], sub);
 }
 
@@ -1194,10 +1228,10 @@ static void ui_update(void) {
         strcat(buf, " LOG!");
     }
     int status_issue = fetch_fail || !log_nvs || log_full;
-    // header rotation: weather/PM 10s, status 5s, learning status 5s
+    // header rotation: weather/PM 10s, status 10s (per-route learned
+    // confidence lives in the dots, no header LEARN phase needed)
     int slot = t.tm_sec % 20;
     int env_phase = slot < 10;
-    int learn_phase = learner_ready && slot >= 15 && !status_issue;
     if ((env.have_pm || env.have_wx) && env_phase && !status_issue) {
         lv_obj_clear_flag(env_group, LV_OBJ_FLAG_HIDDEN);
         lv_label_set_text(hdr_label, "");
@@ -1240,24 +1274,6 @@ static void ui_update(void) {
             set_env_span(6, "", lv_color_hex(0x96969A));
         }
         lv_obj_invalidate(env_group);
-    } else if (learn_phase) {
-        lv_obj_add_flag(env_group, LV_OBJ_FLAG_HIDDEN);
-        // average learned confidence across routes (current day-type)
-        double tot = 0;
-        int n = 0;
-        for (int i = 0; i < N_ROWS; i++) {
-            double c = learner_conf_now(i);
-            if (c > 0) { tot += c; n++; }
-        }
-        if (n > 0) {
-            snprintf(buf, sizeof(buf), "LEARN %d%% (%d/%d)",
-                     (int)(100 * tot / n + 0.5), n, N_ROWS);
-            lv_label_set_text(hdr_label, buf);
-            lv_obj_set_style_text_color(hdr_label, lv_color_hex(0x9BD8FF), 0);
-        } else {
-            lv_label_set_text(hdr_label, buf);
-            lv_obj_set_style_text_color(hdr_label, lv_color_white(), 0);
-        }
     } else {
         lv_obj_add_flag(env_group, LV_OBJ_FLAG_HIDDEN);
         lv_label_set_text(hdr_label, buf);
@@ -1276,6 +1292,42 @@ static void ui_update(void) {
         const row_cfg_t* rc = &ROWS[i];
         row_state_t* rs = &rows[i];
         char b[32];
+
+        // dot semantics: grades the MAIN claim only. Green = the main number is
+        // live data (reality, trusted). Tier (green >=80%, yellow 70-80%,
+        // red below) = the main number is a learned fill (blue). Neutral =
+        // static schedule estimate (blue, ungraded). Dim = "--"/DONE. The
+        // subtext never affects the dot — its blue already says "learned".
+        {
+            double c = learner_conf_now(i);
+            int l1, l2;
+            int secs_now = hm * 60 + t.tm_sec;
+            int learned_fill = c >= LEARNED_FILL_CONF &&
+                learner_next_now(i, &l1, &l2) &&
+                l1 * 60 - secs_now > LEARNED_FILL_MIN_SECS && l1 - hm < 90;
+            int learned_sub = c >= LEARNED_SUBTEXT_CONF &&
+                learner_next_now(i, &l1, &l2) && l2 > hm && l2 - hm <= 90;
+            uint32_t col;
+            if (rs->has_arrival || rs->zombie ||
+                       (rows[i].arrtime >= 0 && now - rows[i].fetched < 300)) {
+                col = 0x4CAF50;   // live — same priority as the display: wins
+            } else if (learned_fill || learned_sub) {
+                // any learned prediction on the row gets the grade (the blue
+                // subtext alone can be the row's only claim, e.g. "--" main)
+                col = c >= 0.80 ? 0x4CAF50 : (c >= 0.70 ? 0xFFD400 : 0xA03030);
+            } else if (rc->has_sched) {
+                int hw = we ? rc->hw_weekend : (is_peak_now() ? rc->hw_commute : rc->hw_weekday);
+                int first_at_stop = rc->first_hm + rc->to_stop;
+                int last_at_stop = rc->last_hm + rc->to_stop;
+                if (hm < first_at_stop || hm > last_at_stop) col = 0x505860;
+                else {
+                    int cycle = hw * 60;
+                    int rem = (cycle - ((secs_now - first_at_stop * 60) % cycle)) % cycle;
+                    col = rem < LEARNED_FILL_MIN_SECS ? 0x505860 : 0x606870;
+                }
+            } else col = 0x505860;
+            lv_obj_set_style_bg_color(conf_dots[i], lv_color_hex(col), 0);
+        }
 
         // zombie countdown: the feed went quiet on a bus that hasn't reached
         // its expected arrival moment yet — keep counting the last known ETA
@@ -1435,7 +1487,7 @@ static void ui_update(void) {
                 int cycle = hw * 60;
                 int since_first = (hm * 60 + t.tm_sec) - first_at_stop * 60;
                 int rem = (cycle - (since_first % cycle)) % cycle;
-                if (rem < 900) {
+                if (rem < LEARNED_FILL_MIN_SECS) {
                     // inside the live-reporting window: if a bus were really
                     // this close, live data would confirm it — so stay silent
                     strcpy(b, "--");
