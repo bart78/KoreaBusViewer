@@ -43,6 +43,9 @@ def daytype(date, holidays, hol_flag=False):
         return DAY_WEEKEND
     return DAY_WEEKEND if date.weekday() >= 5 else DAY_WEEKDAY
 
+MERGE_GAP = 6      # merge aligned columns closer than this (missed-bus shift)
+MIN_DAY_FRAC = 0.6 # anomaly scoring needs a day at least this complete
+
 def aligned_medians(days):
     if not days:
         return []
@@ -51,8 +54,19 @@ def aligned_medians(days):
     for i in range(n):
         col = [d[i] for d in days if i < len(d)]
         if col:
-            positions.append((statistics.median(col), len(col)))
-    return positions
+            positions.append([statistics.median(col), len(col)])
+    # ordinal alignment splits one real arrival into two columns when a day
+    # missed a bus (everything shifts by one position) — merge close columns
+    merged = []
+    for med, cnt in sorted(positions):
+        if merged and med - merged[-1][0] <= MERGE_GAP:
+            prev = merged[-1]
+            tot = prev[1] + cnt
+            prev[0] = (prev[0] * prev[1] + med * cnt) / tot
+            prev[1] = tot
+        else:
+            merged.append([med, cnt])
+    return [(round(m), int(c)) for m, c in merged]
 
 class RouteModel:
     def __init__(self, number):
@@ -78,6 +92,8 @@ class RouteModel:
     def score_day(self, ring, arrivals):
         if len(ring) < 3:
             return False, True
+        if len(arrivals) < MIN_DAY_FRAC * statistics.median(len(d) for d in ring):
+            return False, True   # partial day: can't judge it
         shifts = []
         for d in ring:
             m = min(len(d), len(arrivals))
@@ -106,11 +122,23 @@ class RouteModel:
         n_b = next((s[1] for s in slots if b is not None and abs(s[0] - b) < 0.01), 0)
         return a, b, min(n_a, n_b) if b is not None else n_a
 
-    def confidence(self, daytype):
+def confidence(self, daytype):
+        """Reproducibility: fraction of (day × slot) pairs where the day's
+        nearest arrival landed within TOLERANCE of the slot median. A route
+        whose pattern doesn't converge scores low automatically — no
+        per-route logic. Learned fills are only used above a threshold."""
         slots = self.slots(daytype)
-        if not slots:
+        ring = self.ring[daytype]
+        if len(ring) < 3 or not slots:
             return 0
-        return min(1.0, sum(s[1] for s in slots) / (len(slots) * 10))
+        matched = 0
+        total = 0
+        for med, _ in slots:
+            for d in ring:
+                total += 1
+                if any(abs(m - med) <= TOLERANCE for m in d):
+                    matched += 1
+        return matched / total
 
 def fmt(m):
     return f'{int(m // 60):02d}:{int(m % 60):02d}'

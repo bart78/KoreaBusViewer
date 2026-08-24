@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <stdio.h>
+#include <math.h>
 #include "nvs.h"
 #include "../lv_font_mono28.c"
 
@@ -31,11 +32,28 @@ static const char* TAG = "BUS";
 #define GBIS_STATION_ID "206000648"
 #define STOP_LABEL    "STOP 07593"
 
-#define START_HOUR    4
-#define END_HOUR      22
-#define PEAK_REFRESH  15
-#define OFF_REFRESH   60
-#define RETRY_REFRESH 20
+// adaptive polling cadence. Budget: ~800 cycles/day per feed on weekdays
+// (one cycle = one GBIS + one TAGO call) vs the 1000/day data.go.kr cap.
+//  - 05:00-07:00   150s   early service, no rush
+//  - 07:00-10:00    45s   weekday rush (leave-home window)
+//  - 10:00-20:00   120s   regular day
+//  - 20:00-23:00   180s   evening wind-down (decoration mode)
+//  - 23:00-05:00     off   schedule display only, zero calls
+//  - any bus <=30s  30s   close-bus burst: ARRIVING confirmed within ~30s
+#define CAD_START_HOUR  5      // fallback wake if no route has schedule data
+#define WAKE_MINS       30     // display + polling resume this long before first bus
+#define CAD_RUSH_START  7
+#define CAD_RUSH_END    10
+#define CAD_EVE_START   20
+#define CAD_NIGHT_END   23
+#define CAD_MORN_SECS   150
+#define CAD_RUSH_SECS   45
+#define CAD_DAY_SECS    120
+#define CAD_EVE_SECS    180
+#define CAD_OFF_SECS    300   // re-check the window while not polling
+#define CLOSE_WIN_SECS  30
+#define CLOSE_REFRESH   30
+#define RETRY_REFRESH   20
 
 // optional header env line (air quality + weather). data.go.kr services
 // 1062168 (한국환경공단 대기오염정보) and 1360000 (기상청 단기예보) must be
@@ -56,6 +74,8 @@ static const char* TAG = "BUS";
 // how long "ARRIVING" stays on screen after a confirmed arrival before the
 // row moves on to the next bus / schedule placeholder
 #define ARRIVING_SHOW_SECS 20
+// then "JUST LEFT" (dark red) for a bit before the row releases
+#define JUST_LEFT_SHOW_SECS 20
 
 // fixed display order: routes always shown, schedule from 성남 노선현황 CSV
 typedef struct {
@@ -88,15 +108,22 @@ typedef struct {
     int seats;        // remaining seats on first bus (-1 unknown)
     int veh;          // GBIS vehicle id of first bus (-1 unknown)
     int veh_logged;   // vehicle id of the last logged arrival
+    int veh_confirmed; // vehicle id of the last confirmed arrival (-1 none)
+    time_t veh_conf_at; // when that confirm fired (dedupe window)
     int logged;       // arrival already logged to NVS
     time_t logged_ts; // arrival moment of the last predicted log
     time_t fetched;
     int disp;         // smoothed seconds shown on screen (-1 = snap to live)
     int target;       // seconds the display should chase toward
     int anim;         // 1 = the 33ms anim timer owns this row's text
+    int vel;          // current chase velocity (s/tick, signed)
+    int shown;        // last disp value rendered (render-throttle)
     int zombie;       // feed quiet but bus not yet due: keep counting
     int last_eta;     // last live ETA before the row left the live state
+    time_t due_at;    // when a dead-feed countdown first exhausted (release anchor)
     time_t arrived_at; // confirmed arrival moment (shows ARRIVING briefly)
+    int rel_pending;  // outage arrival awaiting feed confirmation
+    time_t rel_due;   // due moment of the pending outage arrival
     // confirmed-arrival tracking: a close bus is gone for good only when
     // the vanish survives (roll / 2 silent polls); state survives polls
     int confirm_pending;  // a close bus vanished and silence is being counted
@@ -110,6 +137,7 @@ static time_t last_refresh = 0;
 static int refresh_secs = 60;
 static time_t last_good = 0;
 static int fetch_fail = 0;
+static int backlight_on = 1;   // display lit during the polling window only
 
 // ---- env header state ----
 typedef struct {
@@ -496,11 +524,31 @@ static void fetch_arrivals(void) {
         if (old_has && old_eta <= LOG_CONFIRM_SECS) {
             int roll = rows[r].has_arrival && old_veh >= 0 &&
                        rows[r].veh >= 0 && rows[r].veh != old_veh;
-            if (roll) {
-                log_arrival(r, old_fetch + old_eta, 1);
+            // a close bus jumped far out (>8 min) and the new vehicle id is
+            // unknown: it passed unseen during a feed gap (vehicle-roll can't
+            // fire without the new id)
+            int jumped = rows[r].has_arrival && old_veh >= 0 &&
+                         rows[r].veh < 0 &&
+                         rows[r].arrtime > old_eta + 480;
+            if (roll || jumped) {
+                // a vanish of a vehicle already confirmed within the last
+                // 10 min is the feed's post-pass flicker, not another arrival
+                int dup = old_veh >= 0 && old_veh == rows[r].veh_confirmed &&
+                          now - rows[r].veh_conf_at < 600;
+                if (!dup) {
+                    log_arrival(r, old_fetch + old_eta, 1);
+                    rows[r].veh_confirmed = old_veh;
+                    rows[r].veh_conf_at = now;
+                }
                 rows[r].arrived_at = old_fetch + old_eta;
+                // if the arrival happened during a feed gap, re-anchor the
+                // display window to now so ARRIVING/JUST LEFT still show
+                if (now - rows[r].arrived_at >
+                    ARRIVING_SHOW_SECS + JUST_LEFT_SHOW_SECS)
+                    rows[r].arrived_at = now;
                 rows[r].confirm_pending = 0;
                 rows[r].silent_polls = 0;
+                rows[r].rel_pending = 0;   // normal confirm supersedes
             } else if (!rows[r].has_arrival) {
                 if (!rows[r].confirm_pending) {
                     rows[r].pend_eta = old_eta;
@@ -509,9 +557,19 @@ static void fetch_arrivals(void) {
                     rows[r].silent_polls = 0;
                 }
                 if (++rows[r].silent_polls >= 2) {
-                    log_arrival(r, rows[r].pend_fetch + rows[r].pend_eta, 1);
+                    int dup = old_veh >= 0 && old_veh == rows[r].veh_confirmed &&
+                              now - rows[r].veh_conf_at < 600;
+                    if (!dup) {
+                        log_arrival(r, rows[r].pend_fetch + rows[r].pend_eta, 1);
+                        rows[r].veh_confirmed = old_veh;
+                        rows[r].veh_conf_at = now;
+                    }
                     rows[r].arrived_at = rows[r].pend_fetch + rows[r].pend_eta;
+                    if (now - rows[r].arrived_at >
+                        ARRIVING_SHOW_SECS + JUST_LEFT_SHOW_SECS)
+                        rows[r].arrived_at = now;
                     rows[r].confirm_pending = 0;
+                    rows[r].rel_pending = 0;   // normal confirm supersedes
                 }
             } else {
                 rows[r].confirm_pending = 0;
@@ -525,6 +583,16 @@ static void fetch_arrivals(void) {
         } else {
             rows[r].confirm_pending = 0;
             rows[r].silent_polls = 0;
+        }
+
+        // outage arrival pending: resolved now that the feed is back.
+        // If the route is still silent the bus arrived unseen — log it at
+        // the due moment. If a bus is present again, cancel (it never came
+        // or a new bus appeared; no double counting).
+        if (rows[r].rel_pending) {
+            if (!rows[r].has_arrival)
+                log_arrival(r, rows[r].rel_due, 1);
+            rows[r].rel_pending = 0;
         }
 
         // predicted arrival (type 0): first bus sighted within the capture
@@ -656,7 +724,7 @@ static void ui_build(void) {
     lv_obj_t* scr = lv_scr_act();
     lv_obj_set_style_bg_color(scr, lv_color_hex(0x0B0E14), 0);
 
-    for (int i = 0; i < N_ROWS; i++) { rows[i].disp = -1; rows[i].anim = 0; }  // snap on first live sighting
+    for (int i = 0; i < N_ROWS; i++) { rows[i].disp = -1; rows[i].anim = 0; rows[i].shown = -999; }  // snap on first live sighting
 
     hdr_label = lv_label_create(scr);
     lv_obj_set_style_text_color(hdr_label, lv_color_white(), 0);
@@ -669,7 +737,8 @@ static void ui_build(void) {
     env_group = lv_spangroup_create(scr);
     lv_obj_set_style_text_font(env_group, &lv_font_montserrat_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(env_group, lv_color_hex(0x96969A), LV_PART_MAIN);
-    lv_obj_set_pos(env_group, 10, 9);
+    // vertically centered against the font-20 header line (22px at y=6)
+    lv_obj_set_pos(env_group, 10, 8);
     lv_spangroup_set_align(env_group, LV_TEXT_ALIGN_LEFT);
     for (int i = 0; i < 7; i++) {
         env_span[i] = lv_spangroup_new_span(env_group);
@@ -677,13 +746,19 @@ static void ui_build(void) {
     }
     lv_obj_add_flag(env_group, LV_OBJ_FLAG_HIDDEN);
 
+    // clock: right-aligned to a fixed box ending at x=310, so the right
+    // margin stays 10px (mirroring the left) regardless of the time shown
     clock_label = lv_label_create(scr);
     lv_obj_set_style_text_color(clock_label, lv_color_hex(0xFF5252), 0);
     lv_obj_set_style_text_font(clock_label, &lv_font_montserrat_20, 0);
-    lv_obj_set_pos(clock_label, 260, 6);
+    lv_obj_set_pos(clock_label, 244, 6);
+    lv_obj_set_width(clock_label, 66);
+    lv_obj_set_style_text_align(clock_label, LV_TEXT_ALIGN_RIGHT, 0);
+    lv_label_set_text(clock_label, "");
 
     for (int i = 0; i < N_ROWS; i++) {
-        int y = 46 + i * 60;
+        // rows start just below the header (46 + 10px), clearing the bottom
+        int y = 56 + i * 60;
 
         route_labels[i] = lv_label_create(scr);
         lv_obj_set_style_text_color(route_labels[i], lv_color_hex(0xFFD400), 0);
@@ -698,7 +773,7 @@ static void ui_build(void) {
         time2_labels[i] = lv_label_create(scr);
         lv_obj_set_style_text_color(time2_labels[i], lv_color_hex(0x96969A), 0);
         lv_obj_set_style_text_font(time2_labels[i], &lv_font_montserrat_16, 0);
-        lv_obj_set_pos(time2_labels[i], 160, y + 36);
+        lv_obj_set_pos(time2_labels[i], 160, y + 30);
 
         char no[8];
         snprintf(no, sizeof(no), "%d", ROWS[i].number);
@@ -822,25 +897,73 @@ static int show_seats(int route_no) {
     return route_no == 4103 || route_no == 9409 || route_no == 9507;
 }
 
+// any bus within CLOSE_WIN_SECS of the stop → burst-cadence so the
+// ARRIVING state is confirmed (or corrected) within ~30s
+static int any_close_bus(void) {
+    time_t now = kst_now();
+    for (int i = 0; i < N_ROWS; i++) {
+        if (rows[i].has_arrival &&
+            rows[i].arrtime - (int)(now - rows[i].fetched) <= CLOSE_WIN_SECS)
+            return 1;
+    }
+    return 0;
+}
+
+// weekday rush window (also drives the commute-headway selection)
 static int is_peak_now(void) {
     time_t now = kst_now();
     struct tm t;
     localtime_r(&now, &t);
     if (weekend_p()) return 0;
-    return (t.tm_hour >= 6 && t.tm_hour < 9) || (t.tm_hour >= 15 && t.tm_hour < 19);
+    return (t.tm_hour >= CAD_RUSH_START && t.tm_hour < CAD_RUSH_END);
 }
 
-// any bus within a minute of the stop → poll at peak cadence so the
-// ARRIVING state is confirmed (or corrected) within ~15s instead of 60s.
-// The 60s trigger bounds the extra quota cost (~4 calls per arrival).
-static int any_close_bus(void) {
-    time_t now = kst_now();
+// every configured route past its last bus → nothing left to query
+// until tomorrow morning (event-based night mode; saves quota on late
+// evenings beyond the time-based window)
+static int all_done_now(void) {
+    int hm = now_hm();
     for (int i = 0; i < N_ROWS; i++) {
-        if (rows[i].has_arrival &&
-            rows[i].arrtime - (int)(now - rows[i].fetched) <= 60)
-            return 1;
+        if (!ROWS[i].has_sched) return 0;  // can't know → keep polling
+        if (hm <= ROWS[i].last_hm + ROWS[i].to_stop) return 0;
     }
-    return 0;
+    return 1;
+}
+
+// earliest first-bus arrival at the stop (minutes since midnight), -1 unknown
+static int first_arrival_min(void) {
+    int best = -1;
+    for (int i = 0; i < N_ROWS; i++) {
+        if (!ROWS[i].has_sched) continue;
+        int at = ROWS[i].first_hm + ROWS[i].to_stop;
+        if (best < 0 || at < best) best = at;
+    }
+    return best;
+}
+
+// current polling cadence in seconds, or -1 outside the polling window
+// (night: schedule-only display, no API calls, lights out). Wakes ~30 min
+// before the earliest first bus (later: the learner's real first arrival).
+static int cadence_now(void) {
+    time_t now = kst_now();
+    struct tm t;
+    localtime_r(&now, &t);
+    int h = t.tm_hour;
+    int first = first_arrival_min();
+    int wake_min = (first >= 0) ? first - WAKE_MINS : CAD_START_HOUR * 60;
+    if (h * 60 + t.tm_min < wake_min || h >= CAD_NIGHT_END)
+        return -1;
+    if (all_done_now())
+        return -1;
+    if (any_close_bus())
+        return CLOSE_REFRESH;
+    if (!weekend_p() && h >= CAD_RUSH_START && h < CAD_RUSH_END)
+        return CAD_RUSH_SECS;
+    if (h >= CAD_EVE_START)
+        return CAD_EVE_SECS;
+    if (h < CAD_RUSH_START)
+        return CAD_MORN_SECS;
+    return CAD_DAY_SECS;
 }
 
 // air quality grade colors (Korea standard): 좋음 blue, 보통 green,
@@ -873,6 +996,53 @@ static lv_color_t wx_color(int cond) {
 static void set_env_span(int i, const char* txt, lv_color_t col) {
     lv_span_set_text(env_span[i], txt);
     lv_style_set_text_color(&env_span[i]->style, col);
+}
+
+// subtext line: seats bracket + second-bus "+Xm" — also shown during
+// ARRIVING/JUST LEFT so the next bus stays visible while the row
+// acknowledges the one that just left
+static void set_subtext(int i, time_t now) {
+    char sub[32] = "";
+    if (rows[i].seats >= 0 && show_seats(ROWS[i].number)) {
+        snprintf(sub, sizeof(sub), "(%d)", rows[i].seats);
+        // the build-time width was unreliable (measured 0) — reposition the
+        // bracket after layout using the route label's actual width
+        lv_obj_set_pos(seats_labels[i],
+                       10 + lv_obj_get_width(route_labels[i]) + 4,
+                       lv_obj_get_y(seats_labels[i]));
+    }
+    lv_label_set_text(seats_labels[i], sub);
+    sub[0] = 0;
+    if (rows[i].arrtime2 >= 0) {
+        int rem2 = rows[i].arrtime2 - (int)(now - rows[i].fetched);
+        if (rem2 < 0) rem2 = 0;
+        snprintf(sub, sizeof(sub), "+%dm", (rem2 + 59) / 60);
+    }
+    lv_label_set_text(time2_labels[i], sub);
+}
+
+// rough sunrise/sunset (KST, lat ~37.5N) — accurate to ~±15 min, plenty for
+// labeling SUN vs CLEAR on a clear day; no API or config needed
+#define SOLAR_NOON_MIN (12 * 60 + 20)
+static void solar_times(int doy, int* rise_min, int* set_min) {
+    double decl = 23.45 * sin(2.0 * 3.141592653589793 * (284 + doy) / 365.0);
+    double lat = 37.4 * 3.141592653589793 / 180.0;
+    double cosha = -tan(lat) * tan(decl * 3.141592653589793 / 180.0);
+    if (cosha < -1.0) cosha = -1.0;
+    if (cosha > 1.0) cosha = 1.0;
+    int half = (int)(acos(cosha) * 180.0 / 3.141592653589793 * 4.0);
+    *rise_min = SOLAR_NOON_MIN - half;
+    *set_min = SOLAR_NOON_MIN + half;
+}
+
+static int is_daytime(void) {
+    time_t now = kst_now();
+    struct tm t;
+    localtime_r(&now, &t);
+    int rise, set;
+    solar_times(t.tm_yday + 1, &rise, &set);
+    int hm = t.tm_hour * 60 + t.tm_min;
+    return hm > rise && hm < set;
 }
 
 static void ui_update(void) {
@@ -914,13 +1084,18 @@ static void ui_update(void) {
             snprintf(v, sizeof(v), "%dC ", env.temp);
             set_env_span(5, v, lv_color_hex(0x9BD8FF));
             const char* wname = "SKY";
-            if (wcond == 0) wname = "SUN";
-            else if (wcond == 1) wname = "CLOUD";
+            lv_color_t wcol = wx_color(wcond);
+            if (wcond == 0 && !is_daytime()) {
+                wname = "CLR";
+                wcol = lv_color_hex(0x7A9BB8);   // dim night blue, not sunny yellow
+            } else if (wcond == 0) {
+                wname = "SUN";
+            } else if (wcond == 1) wname = "CLD";
             else if (wcond == 2) wname = "OVC";
             else if (wcond == 3) wname = "RAIN";
             else if (wcond == 4) wname = "SNOW";
             else if (wcond == 5) wname = "SHWR";
-            set_env_span(6, wname, wx_color(wcond));
+            set_env_span(6, wname, wcol);
         } else {
             set_env_span(4, "", lv_color_hex(0x96969A));
             set_env_span(5, "", lv_color_hex(0x96969A));
@@ -936,7 +1111,7 @@ static void ui_update(void) {
         lv_obj_set_style_text_color(hdr_label, hdr_col, 0);
     }
 
-    snprintf(buf, sizeof(buf), "%02d:%02d", t.tm_hour, t.tm_min);
+    snprintf(buf, sizeof(buf), "%d:%02d", t.tm_hour, t.tm_min);
     lv_label_set_text(clock_label, buf);
 
     int hm = now_hm();
@@ -955,7 +1130,30 @@ static void ui_update(void) {
         if (rs->has_arrival) rs->zombie = 0;
 
         if (rs->has_arrival || rs->zombie) {
-            if (rs->has_arrival) rs->arrived_at = 0;  // fresh data supersedes
+            // the bus we were watching just arrived; the next bus is live,
+            // but still show ARRIVING/JUST LEFT briefly before switching
+            if (rs->has_arrival && rs->arrived_at &&
+                now < rs->arrived_at + ARRIVING_SHOW_SECS) {
+                lv_label_set_text(time1_labels[i], "ARRIVING");
+                lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0x4CAF50), 0);
+                set_subtext(i, now);
+                rs->anim = 0;
+                continue;
+            }
+            if (rs->has_arrival && rs->arrived_at &&
+                now < rs->arrived_at + ARRIVING_SHOW_SECS + JUST_LEFT_SHOW_SECS) {
+                lv_label_set_text(time1_labels[i], "JUST LEFT");
+                lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0xA03030), 0);
+                set_subtext(i, now);
+                rs->anim = 0;
+                continue;
+            }
+            if (rs->arrived_at) {
+                // acknowledgment window over: the next bus is a discrete
+                // event — snap to it rather than racing up
+                rs->arrived_at = 0;
+                rs->disp = -1;
+            }
             int rem;
             if (rs->has_arrival) {
                 rem = rs->arrtime - (int)(now - rs->fetched);
@@ -967,16 +1165,38 @@ static void ui_update(void) {
                 // countdown exhausted: ARRIVING briefly, then release
                 if (rem == 0 &&
                     now >= rs->fetched + rs->last_eta + ARRIVING_SHOW_SECS) {
+                    rs->arrived_at = rs->fetched + rs->last_eta;
+                    rs->rel_pending = 1;   // log once the feed returns
+                    rs->rel_due = rs->arrived_at;
                     rs->zombie = 0;
                     rs->last_eta = 0;
                 }
             }
             uint32_t row_age = (uint32_t)(now - rs->fetched);
-            // exhausted countdown with a dead feed: honest "--" instead of
-            // implying the bus is arriving (it may be stuck far away)
+            // exhausted countdown with a dead feed: acknowledge the arrival
+            // (ARRIVING → JUST LEFT) like the zombie path, then release to
+            // the schedule instead of flashing "--"
             if (rem == 0 && row_age > 120 && !rs->zombie) {
-                lv_label_set_text(time1_labels[i], "--");
-                lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0xFF7A00), 0);
+                time_t anchor = rs->arrived_at;
+                if (!anchor) {
+                    if (!rs->due_at) rs->due_at = now;
+                    anchor = rs->due_at;
+                }
+                int since = (int)(now - anchor);
+                if (since < ARRIVING_SHOW_SECS) {
+                    lv_label_set_text(time1_labels[i], "ARRIVING");
+                    lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0x4CAF50), 0);
+                } else if (since < ARRIVING_SHOW_SECS + JUST_LEFT_SHOW_SECS) {
+                    lv_label_set_text(time1_labels[i], "JUST LEFT");
+                    lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0xA03030), 0);
+                } else {
+                    rs->has_arrival = 0;   // release to the schedule/--
+                    rs->due_at = 0;
+                    rs->rel_pending = 1;   // log once the feed returns
+                    rs->rel_due = anchor;
+                    lv_label_set_text(time1_labels[i], "--");
+                    lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0x505860), 0);
+                }
                 rs->anim = 0;
             } else {
                 // the 100ms anim timer races disp toward this target
@@ -987,43 +1207,45 @@ static void ui_update(void) {
                     fmt_secs(rem, b, sizeof(b));
                     lv_label_set_text(time1_labels[i], b);
                 }
-                lv_color_t col = row_age < 60 ? lv_color_white()
-                              : (row_age < 180 ? lv_color_hex(0xFFD400) : lv_color_hex(0xFF7A00));
+                lv_color_t col = rem == 0 ? lv_color_hex(0x4CAF50)
+                              : (row_age < 60 ? lv_color_white()
+                              : (row_age < 180 ? lv_color_hex(0xFFD400) : lv_color_hex(0xFF7A00)));
                 lv_obj_set_style_text_color(time1_labels[i], col, 0);
             }
 
-            char sub[32] = "";
-            if (rs->seats >= 0 && show_seats(ROWS[i].number)) {
-                snprintf(sub, sizeof(sub), "(%d)", rs->seats);
-            }
-            lv_label_set_text(seats_labels[i], sub);
-            sub[0] = 0;
-            if (rs->arrtime2 >= 0) {
-                int rem2 = rs->arrtime2 - (int)(now - rs->fetched);
-                if (rem2 < 0) rem2 = 0;
-                snprintf(sub, sizeof(sub), "+%dm", (rem2 + 59) / 60);
-            }
-            lv_label_set_text(time2_labels[i], sub);
+            set_subtext(i, now);
             continue;
         }
 
         // no live arrival: schedule placeholder. A just-confirmed arrival
         // (the watched bus left the feed) keeps ARRIVING on screen briefly
-        // instead of jumping straight to the next-bus estimate
+        // instead of jumping straight to the next-bus estimate, then
+        // JUST LEFT (dark red) before the row releases
         if (rs->arrived_at && now < rs->arrived_at + ARRIVING_SHOW_SECS) {
             lv_label_set_text(time1_labels[i], "ARRIVING");
-            lv_obj_set_style_text_color(time1_labels[i], lv_color_white(), 0);
-            lv_label_set_text(time2_labels[i], "");
-            lv_label_set_text(seats_labels[i], "");
+            lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0x4CAF50), 0);
+            set_subtext(i, now);
             rs->anim = 0;
             continue;
+        }
+        if (rs->arrived_at &&
+            now < rs->arrived_at + ARRIVING_SHOW_SECS + JUST_LEFT_SHOW_SECS) {
+            lv_label_set_text(time1_labels[i], "JUST LEFT");
+            lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0xA03030), 0);
+            set_subtext(i, now);
+            rs->anim = 0;
+            continue;
+        }
+        if (rs->arrived_at) {
+            rs->arrived_at = 0;   // window over: next live sighting snaps
+            rs->disp = -1;
         }
         if (rc->has_sched) {
             int hw = we ? rc->hw_weekend : (is_peak_now() ? rc->hw_commute : rc->hw_weekday);
             int first_at_stop = rc->first_hm + rc->to_stop;
             int last_at_stop = rc->last_hm + rc->to_stop;
             if (hm < first_at_stop) {
-                snprintf(b, sizeof(b), "STARTS %02d:%02d", first_at_stop / 60, first_at_stop % 60);
+                snprintf(b, sizeof(b), "(%02d:%02d)", first_at_stop / 60, first_at_stop % 60);
                 lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0x3399FF), 0);
             } else if (hm > last_at_stop) {
                 // last bus has passed our stop: no more arrivals today
@@ -1065,26 +1287,44 @@ static void ui_update(void) {
 static void ui_tick_cb(lv_timer_t* t) { ui_update(); }
 
 // 33ms chase timer (~30fps): when a row's target changes (feed update, next
-// bus, regression), race the displayed seconds toward it so the numbers blur
-// through the difference instead of jumping one frame
+// bus, regression), race the displayed seconds toward it with a smooth
+// velocity ramp — accelerate to cruise, ease back down into the target —
+// so big gaps blur through the numbers and small ones settle invisibly.
 static void ui_anim_cb(lv_timer_t* t) {
     for (int i = 0; i < N_ROWS; i++) {
         row_state_t* rs = &rows[i];
         if (!rs->anim || rs->disp == rs->target)
             continue;
         int gap = rs->target - rs->disp;
-        int step = (int)llabs((long)gap) * 3 / 10 + 1;  // ~30% of gap per tick
-        if (step > 8) step = 8;                          // max 8s per 33ms (~240s/s)
-        if (gap < 0) step = -step;
-        rs->disp += step;
-        if ((gap > 0 && rs->disp > rs->target) || (gap < 0 && rs->disp < rs->target))
+        if (gap >= -2 && gap <= 2) {
+            // tiny gap (steady countdown drift, small corrections): settle
             rs->disp = rs->target;
-        char b[32];
-        if (rs->disp == rs->target)
-            fmt_secs(rs->target, b, sizeof(b));
-        else
-            snprintf(b, sizeof(b), "%02dm %02ds", rs->disp / 60, rs->disp % 60);
-        lv_label_set_text(time1_labels[i], b);
+            rs->vel = 0;
+        } else {
+            // desired velocity: ~1s/tick near the target, up to 8s/tick far
+            int desired = (abs(gap) / 8 + 1) * (gap > 0 ? 1 : -1);
+            if (desired > 8) desired = 8;
+            else if (desired < -8) desired = -8;
+            int dv = (desired - rs->vel) / 4;      // C truncates toward zero
+            if (dv == 0 && desired != rs->vel)      // ...so guard against stall
+                dv = (desired > rs->vel) ? 1 : -1;
+            rs->vel += dv;
+            rs->disp += rs->vel;
+            if ((gap > 0 && rs->disp > rs->target) || (gap < 0 && rs->disp < rs->target))
+                rs->disp = rs->target;
+        }
+        if (rs->disp != rs->shown) {
+            rs->shown = rs->disp;
+            char b[32];
+            if (rs->disp == rs->target) {
+                fmt_secs(rs->target, b, sizeof(b));
+                if (rs->target == 0)
+                    lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0x4CAF50), 0);
+            } else {
+                snprintf(b, sizeof(b), "%02dm %02ds", rs->disp / 60, rs->disp % 60);
+            }
+            lv_label_set_text(time1_labels[i], b);
+        }
     }
 }
 
@@ -1121,11 +1361,26 @@ static void refresh_task(void* arg) {
         if (++wifi_tick % 30 == 0)
             wifi_ensure();
         if (now - last_refresh >= refresh_secs) {
-            fetch_arrivals();
-            if (fetch_fail) {
-                refresh_secs = RETRY_REFRESH;
+            int cad = cadence_now();
+            if (cad < 0) {
+                // night: schedule-only display, no API calls, lights out
+                for (int i = 0; i < N_ROWS; i++) rows[i].has_arrival = 0;
+                if (backlight_on) {
+                    bsp_display_brightness_set(0);
+                    backlight_on = 0;
+                }
+                refresh_secs = CAD_OFF_SECS;
             } else {
-                refresh_secs = (is_peak_now() || any_close_bus()) ? PEAK_REFRESH : OFF_REFRESH;
+                if (!backlight_on) {
+                    bsp_display_brightness_set(100);
+                    backlight_on = 1;
+                }
+                fetch_arrivals();
+                if (fetch_fail) {
+                    refresh_secs = RETRY_REFRESH;
+                } else {
+                    refresh_secs = cadence_now();
+                }
             }
             last_refresh = now;
         } else if (now - env_next >= ENV_REFRESH_SECS) {
