@@ -1,6 +1,6 @@
 # KoreaBusViewer
 
-An ESP32-S3 signboard that shows **live bus arrivals** for a single Korean (Seongnam/Gyeonggi) bus stop on a 320×480 QSPI display — arrival countdowns with seconds, second-bus and seat-count subtext, a schedule fallback when live data is silent, and a self-validating arrival logger that records ground truth for future prediction.
+An ESP32-S3 signboard that shows **live bus arrivals** for a single Korean (Seongnam/Gyeonggi) bus stop on a 320×480 QSPI display — arrival countdowns with seconds, second-bus and seat-count subtext, an **on-device learned-schedule fallback** that rebuilds arrival patterns from observed ground truth when live data goes silent, and a self-validating arrival logger.
 
 The board this was built for: JC3248W535EN (ESP32-S3, 320×480 LVGL display).
 
@@ -20,10 +20,10 @@ Display semantics:
 | White `4m 10s` | Fresh live arrival (with seconds; counts to `0m 00s`) |
 | `ARRIVING` | Live bus at the stop, countdown exhausted — lasts only until the next poll confirms the pass (polling speeds to 15 s near arrivals) |
 | Yellow / orange | Live data is 1–3 min / 3+ min old |
-| Subtext `+9m` | Second bus ETA (regular routes) |
+| Subtext `+9m` | Second bus ETA — live when the feed is fresh, otherwise the **learned** next bus (blue) |
 | Subtext `SEATS 12` | Seats left (express routes only) |
-| Blue `~2Xm` | Schedule estimate; counts down, **never** says SOON |
-| `--` | Schedule estimate inside the live-reporting window with no live sighting — if a bus were really that close, live data would confirm it |
+| Blue `~2Xm` | **Learned-schedule** estimate (from on-device arrival rings); counts down, **never** says SOON |
+| `--` | No bus claimed: live silence inside the 5-minute window, or a learned estimate below the confidence gate |
 | `DONE` | Last bus has passed the stop |
 | Header orange | Both feeds failing (keeps last data, retries, auto-reconnects WiFi) |
 | Header `NOLOG`/`LOG!` (yellow) | Arrival logger problem |
@@ -33,8 +33,8 @@ Display semantics:
 ## 2. Implementation
 
 - **Firmware**: ESP-IDF 5.x + LVGL 8.3, built with PlatformIO (`espidf/`). Single main module `src/bus.c`.
-- **Data flow**: a refresh task polls GBIS then TAGO on an adaptive cadence (15 min peak → 15 s, off-peak → 60 s, failures → 20 s). Responses are parsed item-by-item (order-independent, quoted/unquoted numbers, `null`-safe) and merged into a per-route "earliest ETA" table that drives both the display and the logger. A slower task (every 10 min) fetches the header env line — air quality from the nearest airkorea station (한국환경공단 대기오염정보, service `1062168`, station `ENV_STATION` with a province-median fallback) and the next weather slot (기상청 단기예보, service `1360000`, grid `WX_GRID_X/Y`).
-- **Schedule fallback**: static per-route rows (headway by day type, first/last bus, ride time) synthesize a next-departure countdown. The countdown is only shown when it is **outside** the live-reporting window; inside the window, live silence means "no bus coming" and the row shows `--`.
+- **Data flow**: a refresh task polls GBIS then TAGO on an adaptive cadence — 45 s during the 07–10 rush, 120 s by day, 180 s in the evening, none 23:00–05:00, and a 30 s burst while a bus is within 30 s of arrival (GBIS+TAGO share a 1000 calls/day budget each). Responses are parsed item-by-item (order-independent, quoted/unquoted numbers, `null`-safe) and merged into a per-route "earliest ETA" table that drives both the display and the logger. A slower task (every 10 min) fetches the header env line — air quality from the nearest airkorea station (한국환경공단 대기오염정보, service `1062168`, station `ENV_STATION` with a province-median fallback) and the next weather slot (기상청 단기예보, service `1360000`, grid `WX_GRID_X/Y`).
+- **Learned-schedule fallback**: a portable learner (`src/learner/learner.c`, no FreeRTOS/LVGL deps) rebuilds per-route arrival **rings** from the logger's buslog at boot, in PSRAM. Days are bucketed by type (weekday / weekend+holiday); per-route slots are medians of observed arrival minutes with anomaly rejection, and a **reproducibility confidence** (fraction of day×slot samples matching within ±3 min, days with no near-arrival skipped) scores each route. Learned fills show in blue when confidence ≥ 0.60 and the bus is **5–90 min out**; inside 5 min, live silence reads as unknown (`--`). When the live feed is silent, the subtext shows the learned next bus (blue) in place of the live second bus. The static headway model remains the cold-start fallback for routes below the confidence gate.
 - **Arrival logger**: every arrival is appended to NVS as a 2-byte event, one blob per day (60 days retained, 128 KB NVS partition):
   - `type 0` = **predicted** arrival (first bus sighted within 4 min, deduped per vehicle id)
   - `type 1` = **confirmed** arrival — the tracked close bus left the feed. Detected by a GBIS **vehicle-id roll** (the tracked bus passed even though the next bus immediately took the first-bus slot) or by **2 consecutive silent polls** (a 1-poll feed blip is not counted as an arrival).
@@ -53,7 +53,7 @@ This repo is the result of a long debugging journey; the interesting bits:
 - **"It's 6 minutes away"**: the board once showed a live 6-minute ETA for a route whose last bus had already passed — same off-by-one bug, now covered by the "inside the live window without confirmation → `--`" rule.
 - **The logger only heard half the routes**: after a few days of logging, routes 340/9507/4103/310 had plenty of confirmed arrivals but 32/73/9409 had almost none. The confirmed event fired on *feed silence*, not arrivals — and only TAGO (which covers just 310/4103/9507 and drops vehicles at the stop) ever goes silent. GBIS (the only feed for 32/73/9409) rolls its first-bus slot straight to the next bus, so those routes never went silent. Fix: confirm on the GBIS **vehicle-id roll** (the tracked bus leaving the feed is an arrival even when a new bus immediately takes the slot), require 2 silent polls for the silence path (a 1-poll blip where the bus reappears is not an arrival), and widen the predicted window from ≤90 s to ≤240 s — GBIS ETAs are ~60 s-quantized (observed jumps like 137→14→893), so the 90 s window was skipped by most buses (route 9409: 0 predicted events in 3 days).
 - **Schedule estimates that lied**: the headway model happily claimed `~2m` at 11 pm when no bus existed. Rule: only show estimates outside the live-reporting window; never say SOON in blue.
-- **A learning system was considered** (predict arrivals from observed history) and deferred — instead the firmware now logs raw predicted/confirmed arrivals per bus, so the decision can be made later on real data instead of assumptions.
+- **The learner made it on the board**: the "future learned fallback" got built. The Python prototype moved into a portable C module (`src/learner/`), golden-tested against the prototype on a week of logged arrivals (byte-identical output), and the rings are rebuilt from the buslog in PSRAM at boot. Embedded gotchas: the main task and LVGL task stacks had to grow to 8 KB (ring rebuild + TLS handshakes blew the defaults), and learner buffers moved to PSRAM after TLS allocation starved the heap. Field tuning: the learned-fill window started at 15 min and was dropped to **5 min** after a morning of real buses being hidden behind it — while a Kakao-scheduled 4-minute phantom (a bus the ring had never witnessed) was correctly refused. The learner only claims what it has seen arrive.
 
 ## 4. Getting it up and running
 
@@ -95,11 +95,14 @@ Each service needs its own 활용신청 on data.go.kr (the key only works for se
 - `parse_nvs.py` — decode NVS dumps into per-day arrival events
 - `analyze_buslog.py` — weekday arrival-time statistics + prediction accuracy
 - `learn_schedule.py` — the learned-schedule prototype (ring model, anomaly detection, re-baseline)
+- `host_test.c` + `test_learner.py` — golden test: compile `learner.c` for the host, replay the buslog, assert the C output matches the Python prototype exactly (`cc -o /tmp/lt tools/host_test.c espidf/src/learner/learner.c`)
 - `capture_log.py` — headless arrival logger (same detection logic as the firmware, no board needed)
 
 The MicroPython prototype lives in `device/` (copy `config.py.example` → `config.py`).
 
 ## 5. Credits
+
+This project is licensed under the **BSD 3-Clause License** — if you build on it, keep the attribution.
 
 - **Board**: JC3248W535EN 320×480 QSPI display module ([vendor listing](https://s.click.aliexpress.com/e/_DFO5uIV)); vendor demo code kept under `espidf/JC3248W535EN/` (not committed)
 - **[LVGL](https://github.com/lvgl/lvgl)** — vendored under `espidf/libraries/lvgl`
