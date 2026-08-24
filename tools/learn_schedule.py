@@ -45,6 +45,7 @@ def daytype(date, holidays, hol_flag=False):
 
 MERGE_GAP = 6      # merge aligned columns closer than this (missed-bus shift)
 MIN_DAY_FRAC = 0.6 # anomaly scoring needs a day at least this complete
+TOLERANCE = 3      # confidence match tolerance (minutes around a slot)
 
 def aligned_medians(days):
     if not days:
@@ -122,23 +123,26 @@ class RouteModel:
         n_b = next((s[1] for s in slots if b is not None and abs(s[0] - b) < 0.01), 0)
         return a, b, min(n_a, n_b) if b is not None else n_a
 
-def confidence(self, daytype):
-        """Reproducibility: fraction of (day × slot) pairs where the day's
-        nearest arrival landed within TOLERANCE of the slot median. A route
-        whose pattern doesn't converge scores low automatically — no
-        per-route logic. Learned fills are only used above a threshold."""
-        slots = self.slots(daytype)
-        ring = self.ring[daytype]
-        if len(ring) < 3 or not slots:
-            return 0
-        matched = 0
-        total = 0
-        for med, _ in slots:
-            for d in ring:
-                total += 1
-                if any(abs(m - med) <= TOLERANCE for m in d):
-                    matched += 1
-        return matched / total
+    def confidence(self, daytype):
+            """Reproducibility: for each merged slot, how tight are the days'
+            arrivals that land near it? Days with no arrival near a slot (a
+            missed bus) are skipped, not punished. Learned fills are only used
+            above a threshold."""
+            slots = self.slots(daytype)
+            ring = self.ring[daytype]
+            if len(ring) < 3 or not slots:
+                return 0
+            matched = 0
+            total = 0
+            for med, _ in slots:
+                for d in ring:
+                    near = [m for m in d if abs(m - med) <= MERGE_GAP]
+                    if not near:
+                        continue
+                    total += 1
+                    if min(abs(m - med) for m in near) <= TOLERANCE:
+                        matched += 1
+            return matched / total
 
 def fmt(m):
     return f'{int(m // 60):02d}:{int(m % 60):02d}'

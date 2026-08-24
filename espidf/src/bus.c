@@ -16,8 +16,11 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include <math.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 #include "nvs.h"
 #include "../lv_font_mono28.c"
+#include "learner/learner.h"
 
 static const char* TAG = "BUS";
 
@@ -138,6 +141,21 @@ static int refresh_secs = 60;
 static time_t last_good = 0;
 static int fetch_fail = 0;
 static int backlight_on = 1;   // display lit during the polling window only
+
+// ---- learned schedule (rings rebuilt from the buslog) ----
+// learned schedule — rings live in PSRAM (53KB would starve the internal
+// heap that the TLS sessions need)
+#include "esp_heap_caps.h"
+static learner_t* learners;
+static int* learn_conf;
+static int* learn_confn;
+static int learner_ready;
+static int learner_last_day;   // YYYYMMDD of the last day learned
+
+#define LEARNED_FILL_CONF     0.60  // min confidence to use learned fills
+#define LEARNED_SUBTEXT_CONF  0.60  // min confidence for the learned subtext
+#define LEARNED_FILL_MIN_SECS 300   // learned fills show beyond this (5 min);
+                                    // inside it, live silence reads as unknown
 
 // ---- env header state ----
 typedef struct {
@@ -280,6 +298,8 @@ static int http_get(const char* url) {
     if (g_body_len >= (int)sizeof(g_body) - 1) {
         ESP_LOGW(TAG, "response truncated (%d bytes)", g_body_len);
     }
+    if (perr != ESP_OK || st != 200 || g_body_len == 0)
+        ESP_LOGW(TAG, "http fail: %s st=%d len=%d", esp_err_to_name(perr), st, g_body_len);
     return (perr == ESP_OK && st == 200 && g_body_len > 0);
 }
 
@@ -892,6 +912,113 @@ static int weekend_p(void) {
     return is_holiday(now);
 }
 
+// ---- learned schedule: rebuild rings from the buslog at boot ----
+static int learner_daytype_now(void) {
+    return weekend_p() ? LEARNER_DT_WEEKEND : LEARNER_DT_WEEKDAY;
+}
+
+// learn the confirmed arrivals of one buslog day blob.
+// Buffers are PSRAM: the boot task stack is only ~8KB and a day's arrival
+// matrix (7 routes x 96) does not fit on it.
+static void learner_absorb_day(const char* key, const uint8_t* blob, size_t len,
+                               int skip_today) {
+    time_t now = kst_now();
+    struct tm tmt;
+    localtime_r(&now, &tmt);
+    char today[16];
+    snprintf(today, sizeof(today), "d%04d%02d%02d",
+             tmt.tm_year + 1900, tmt.tm_mon + 1, tmt.tm_mday);
+    if (skip_today && strcmp(key, today) == 0) return;
+
+    int hol = 0;
+    for (int r = 0; r < N_ROWS; r++) learn_confn[r] = 0;
+    for (size_t i = 0; i + 1 < len; i += 2) {
+        uint16_t ev = blob[i] | (blob[i + 1] << 8);
+        if (ev & 0x8000) hol = 1;
+        if (ev & 0x4000) {  /* confirmed arrival */
+            int r = (ev >> 11) & 0x7;
+            int mm = ev & 0x7FF;
+            if (r < N_ROWS && learn_confn[r] < LEARNER_MAX_ARR)
+                learn_conf[r * LEARNER_MAX_ARR + learn_confn[r]++] = mm;
+        }
+    }
+    int y, m, d;
+    sscanf(key, "d%04d%02d%02d", &y, &m, &d);
+    int dt = LEARNER_DT_WEEKEND;
+    if (!hol) {
+        struct tm dtm = {0};
+        dtm.tm_year = y - 1900;
+        dtm.tm_mon = m - 1;
+        dtm.tm_mday = d;
+        mktime(&dtm);
+        if (dtm.tm_wday >= 1 && dtm.tm_wday <= 5) dt = LEARNER_DT_WEEKDAY;
+    }
+    for (int r = 0; r < N_ROWS; r++)
+        if (learn_confn[r] > 0)
+            learner_learn_day(&learners[r], dt, &learn_conf[r * LEARNER_MAX_ARR],
+                              learn_confn[r]);
+}
+
+static void learner_rebuild(void) {
+    for (int i = 0; i < N_ROWS; i++) learner_init(&learners[i], ROWS[i].number);
+    learner_ready = 0;
+
+    nvs_iterator_t it = NULL;
+    esp_err_t res = nvs_entry_find(NVS_DEFAULT_PART_NAME, "buslog", NVS_TYPE_BLOB, &it);
+    while (res == ESP_OK && it) {
+        nvs_entry_info_t info;
+        nvs_entry_info(it, &info);
+        if (strncmp(info.key, "d", 1) == 0) {
+            static uint8_t blob[LOG_DAY_BYTES];
+            size_t len = sizeof(blob);
+            if (nvs_get_blob(log_nvs, info.key, blob, &len) == ESP_OK && len >= 2)
+                learner_absorb_day(info.key, blob, len, 1);
+        }
+        res = nvs_entry_next(&it);
+    }
+    nvs_release_iterator(it);
+    learner_ready = 1;
+    time_t now = kst_now();
+    struct tm tmt;
+    localtime_r(&now, &tmt);
+    learner_last_day = (tmt.tm_year + 1900) * 10000 + (tmt.tm_mon + 1) * 100 + tmt.tm_mday;
+    ESP_LOGI(TAG, "learner: rings rebuilt from buslog");
+}
+
+// at the night transition, the current day is complete: learn it
+static void learner_learn_today(void) {
+    if (!learner_ready) return;
+    time_t now = kst_now();
+    struct tm tmt;
+    localtime_r(&now, &tmt);
+    int day = (tmt.tm_year + 1900) * 10000 + (tmt.tm_mon + 1) * 100 + tmt.tm_mday;
+    if (day == learner_last_day) return;
+
+    char key[16];
+    snprintf(key, sizeof(key), "d%04d%02d%02d", tmt.tm_year + 1900, tmt.tm_mon + 1, tmt.tm_mday);
+    static uint8_t blob[LOG_DAY_BYTES];
+    size_t len = sizeof(blob);
+    if (nvs_get_blob(log_nvs, key, blob, &len) == ESP_OK && len >= 2)
+        learner_absorb_day(key, blob, len, 0);
+    learner_last_day = day;
+    ESP_LOGI(TAG, "learner: learned day %d", day);
+}
+
+// learned next arrivals after now (minutes of day). Returns 1 if available.
+static int learner_next_now(int r, int* next1, int* next2) {
+    if (!learner_ready) return 0;
+    time_t now = kst_now();
+    struct tm t;
+    localtime_r(&now, &t);
+    int hm = t.tm_hour * 60 + t.tm_min;
+    return learner_next(&learners[r], learner_daytype_now(), hm, next1, next2);
+}
+
+static double learner_conf_now(int r) {
+    if (!learner_ready) return 0;
+    return learner_confidence(&learners[r], learner_daytype_now());
+}
+
 // seats only make sense on the express routes (직행좌석/광역)
 static int show_seats(int route_no) {
     return route_no == 4103 || route_no == 9409 || route_no == 9507;
@@ -969,7 +1096,7 @@ static int cadence_now(void) {
 // air quality grade colors (Korea standard): 좋음 blue, 보통 green,
 // 나쁨 orange, 매우나쁨 red
 static lv_color_t pm10_color(int v) {
-    if (v < 0) return lv_color_hex(0x96969A);
+    if (v <= 0) return lv_color_hex(0x96969A);
     if (v <= 30) return lv_color_hex(0x3399FF);
     if (v <= 80) return lv_color_hex(0x4CAF50);
     if (v <= 150) return lv_color_hex(0xFF7A00);
@@ -977,7 +1104,7 @@ static lv_color_t pm10_color(int v) {
 }
 
 static lv_color_t pm25_color(int v) {
-    if (v < 0) return lv_color_hex(0x96969A);
+    if (v <= 0) return lv_color_hex(0x96969A);
     if (v <= 15) return lv_color_hex(0x3399FF);
     if (v <= 35) return lv_color_hex(0x4CAF50);
     if (v <= 75) return lv_color_hex(0xFF7A00);
@@ -1003,21 +1130,30 @@ static void set_env_span(int i, const char* txt, lv_color_t col) {
 // acknowledges the one that just left
 static void set_subtext(int i, time_t now) {
     char sub[32] = "";
-    if (rows[i].seats >= 0 && show_seats(ROWS[i].number)) {
+    if (rows[i].seats >= 0 && show_seats(ROWS[i].number) &&
+        now - rows[i].fetched < 240) {
         snprintf(sub, sizeof(sub), "(%d)", rows[i].seats);
-        // the build-time width was unreliable (measured 0) — reposition the
-        // bracket after layout using the route label's actual width
-        lv_obj_set_pos(seats_labels[i],
-                       10 + lv_obj_get_width(route_labels[i]) + 4,
-                       lv_obj_get_y(seats_labels[i]));
+        // stick the bracket to the route number: LVGL-aligns right of it,
+        // vertically centered (no manual width math)
+        lv_obj_align_to(seats_labels[i], route_labels[i], LV_ALIGN_OUT_RIGHT_MID, 4, 0);
     }
     lv_label_set_text(seats_labels[i], sub);
     sub[0] = 0;
-    if (rows[i].arrtime2 >= 0) {
+    // next-bus estimate: the feed's current second bus wins (live trumps,
+    // gray); the learned next2 fills only when the feed reports none (blue)
+    int l1, l2;
+    int hm = now_hm();
+    lv_color_t sub_col = lv_color_hex(0x96969A);
+    if (rows[i].arrtime2 >= 0 && now - rows[i].fetched < 240) {
         int rem2 = rows[i].arrtime2 - (int)(now - rows[i].fetched);
         if (rem2 < 0) rem2 = 0;
         snprintf(sub, sizeof(sub), "+%dm", (rem2 + 59) / 60);
+    } else if (learner_conf_now(i) >= LEARNED_SUBTEXT_CONF &&
+               learner_next_now(i, &l1, &l2) && l2 > hm) {
+        snprintf(sub, sizeof(sub), "+%dm", l2 - hm);
+        sub_col = lv_color_hex(0x3399FF);
     }
+    lv_obj_set_style_text_color(time2_labels[i], sub_col, 0);
     lv_label_set_text(time2_labels[i], sub);
 }
 
@@ -1058,8 +1194,10 @@ static void ui_update(void) {
         strcat(buf, " LOG!");
     }
     int status_issue = fetch_fail || !log_nvs || log_full;
-    // env line shares the header slot: weather/PM ~10s, status line 5s
-    int env_phase = (t.tm_sec % 15) < 10;
+    // header rotation: weather/PM 10s, status 5s, learning status 5s
+    int slot = t.tm_sec % 20;
+    int env_phase = slot < 10;
+    int learn_phase = learner_ready && slot >= 15 && !status_issue;
     if ((env.have_pm || env.have_wx) && env_phase && !status_issue) {
         lv_obj_clear_flag(env_group, LV_OBJ_FLAG_HIDDEN);
         lv_label_set_text(hdr_label, "");
@@ -1073,11 +1211,11 @@ static void ui_update(void) {
 
         set_env_span(0, "PM10 ", lv_color_white());
         snprintf(v, sizeof(v), "%d", env.pm10);
-        if (env.pm10 < 0) strcpy(v, "-");
+        if (env.pm10 <= 0) strcpy(v, "-");   // 0 = no measurement overnight
         set_env_span(1, v, pm10_color(env.pm10));
         set_env_span(2, " | PM2.5 ", lv_color_white());
         snprintf(v, sizeof(v), "%d", env.pm25);
-        if (env.pm25 < 0) strcpy(v, "-");
+        if (env.pm25 <= 0) strcpy(v, "-");
         set_env_span(3, v, pm25_color(env.pm25));
         if (env.have_wx && env.temp >= 0) {
             set_env_span(4, " | ", lv_color_hex(0x96969A));
@@ -1102,6 +1240,24 @@ static void ui_update(void) {
             set_env_span(6, "", lv_color_hex(0x96969A));
         }
         lv_obj_invalidate(env_group);
+    } else if (learn_phase) {
+        lv_obj_add_flag(env_group, LV_OBJ_FLAG_HIDDEN);
+        // average learned confidence across routes (current day-type)
+        double tot = 0;
+        int n = 0;
+        for (int i = 0; i < N_ROWS; i++) {
+            double c = learner_conf_now(i);
+            if (c > 0) { tot += c; n++; }
+        }
+        if (n > 0) {
+            snprintf(buf, sizeof(buf), "LEARN %d%% (%d/%d)",
+                     (int)(100 * tot / n + 0.5), n, N_ROWS);
+            lv_label_set_text(hdr_label, buf);
+            lv_obj_set_style_text_color(hdr_label, lv_color_hex(0x9BD8FF), 0);
+        } else {
+            lv_label_set_text(hdr_label, buf);
+            lv_obj_set_style_text_color(hdr_label, lv_color_white(), 0);
+        }
     } else {
         lv_obj_add_flag(env_group, LV_OBJ_FLAG_HIDDEN);
         lv_label_set_text(hdr_label, buf);
@@ -1240,6 +1396,29 @@ static void ui_update(void) {
             rs->arrived_at = 0;   // window over: next live sighting snaps
             rs->disp = -1;
         }
+        // learned fill: a trustworthy learned next arrival replaces the
+        // static estimate / "--" with a blue countdown (live still trumps)
+        if (learner_conf_now(i) >= LEARNED_FILL_CONF) {
+            int l1, l2;
+            if (learner_next_now(i, &l1, &l2)) {
+                int rem_s = l1 * 60 - (hm * 60 + t.tm_sec);
+                // learned fills respect the live-reporting window: inside
+                // ~15 min, live silence means unknown — show "--" instead
+                if (rem_s > LEARNED_FILL_MIN_SECS && rem_s < 90 * 60) {
+                    rs->target = rem_s;
+                    rs->anim = 1;
+                    if (rs->disp < 0) rs->disp = rem_s;
+                    if (rs->disp == rem_s) {
+                        fmt_secs(rem_s, b, sizeof(b));
+                        lv_label_set_text(time1_labels[i], b);
+                    }
+                    lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0x3399FF), 0);
+                    set_subtext(i, now);
+                    continue;
+                }
+            }
+            rs->anim = 0;
+        }
         if (rc->has_sched) {
             int hw = we ? rc->hw_weekend : (is_peak_now() ? rc->hw_commute : rc->hw_weekday);
             int first_at_stop = rc->first_hm + rc->to_stop;
@@ -1267,8 +1446,7 @@ static void ui_update(void) {
                 }
             }
             lv_label_set_text(time1_labels[i], b);
-            lv_label_set_text(time2_labels[i], "");
-            lv_label_set_text(seats_labels[i], "");
+            set_subtext(i, now);
             rs->anim = 0;
             // short schedule blips keep disp so the live handoff animates;
             // long gaps (>5 min, e.g. overnight) snap to avoid a stale chase
@@ -1276,8 +1454,7 @@ static void ui_update(void) {
         } else {
             lv_label_set_text(time1_labels[i], "--");
             lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0x505860), 0);
-            lv_label_set_text(time2_labels[i], "");
-            lv_label_set_text(seats_labels[i], "");
+            set_subtext(i, now);
             rs->anim = 0;
             if (now - rs->fetched > 300) rs->disp = -1;
         }
@@ -1365,6 +1542,7 @@ static void refresh_task(void* arg) {
             if (cad < 0) {
                 // night: schedule-only display, no API calls, lights out
                 for (int i = 0; i < N_ROWS; i++) rows[i].has_arrival = 0;
+                learner_learn_today();   // the day is complete: learn it
                 if (backlight_on) {
                     bsp_display_brightness_set(0);
                     backlight_on = 0;
@@ -1407,6 +1585,13 @@ void app_main(void) {
 
     wifi_init();
     log_init();
+    learners = heap_caps_malloc(N_ROWS * sizeof(learner_t), MALLOC_CAP_SPIRAM);
+    learn_conf = heap_caps_malloc(N_ROWS * LEARNER_MAX_ARR * sizeof(int), MALLOC_CAP_SPIRAM);
+    learn_confn = heap_caps_malloc(N_ROWS * sizeof(int), MALLOC_CAP_SPIRAM);
+    if (!learners || !learn_conf || !learn_confn) {
+        ESP_LOGE(TAG, "learner: PSRAM alloc failed");
+    }
+    learner_rebuild();                          // rings from the buslog
 
     esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
     esp_sntp_setservername(0, "pool.ntp.org");
@@ -1414,6 +1599,18 @@ void app_main(void) {
     esp_sntp_init();
     int ntp_tries = 0;
     while (kst_now() < 1600000000 && ntp_tries++ < 30) vTaskDelay(pdMS_TO_TICKS(500));
+    struct addrinfo hints = {0}, *res = NULL;
+    hints.ai_family = AF_INET;
+    if (getaddrinfo("apis.data.go.kr", NULL, &hints, &res) == 0 && res) {
+        ESP_LOGI(TAG, "dns ok: apis.data.go.kr -> %s",
+                 inet_ntoa(((struct sockaddr_in*)res->ai_addr)->sin_addr));
+        freeaddrinfo(res);
+    } else {
+        ESP_LOGW(TAG, "dns FAILED for apis.data.go.kr");
+    }
+    ESP_LOGI(TAG, "heap free: internal %d, psram %d",
+             heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
     env_next = kst_now() - ENV_REFRESH_SECS;  // first env fetch on the first loop pass
     holiday_load();                            // cached holidays from NVS
     holi_next = kst_now() - HOLIDAY_REFRESH_SECS;  // refresh on the first loop pass
