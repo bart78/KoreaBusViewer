@@ -213,9 +213,12 @@ static long item_num(const char* start, const char* end, const char* key) {
         if (p < end && *p == '"') {
             p++;
             long v = 0;
+            int neg = 0;
+            if (p < end && *p == '-') { neg = 1; p++; }
             int has = 0;
             while (p < end && *p >= '0' && *p <= '9') { v = v * 10 + (*p - '0'); p++; has = 1; }
-            return has ? v : -1;
+            if (!has) return -1;
+            return neg ? -v : v;
         }
         if (p < end && *p == 'n') return -1;  // null
         return atol(p);
@@ -430,7 +433,8 @@ static void fetch_env(void) {
     }
 
     // weather: next forecast slot (TMP/SKY/PTY) from the latest published base
-    time_t bt = kst_now() - 2 * 3600;
+    // (runs publish ~10 min after the base hour; 40 min of slack is plenty)
+    time_t bt = kst_now() - 40 * 60;
     struct tm b;
     localtime_r(&bt, &b);
     static const int base_slots[] = {2, 5, 8, 11, 14, 17, 20, 23};
@@ -449,23 +453,34 @@ static void fetch_env(void) {
         localtime_r(&now, &tn);
         int today = (tn.tm_year + 1900) * 10000 + (tn.tm_mon + 1) * 100 + tn.tm_mday;
         int want = tn.tm_hour * 100 + tn.tm_min;
-        int best_fd = 0, best_ft = 0;
+        // pick the CURRENT forecast slot (latest at or before now), not the
+        // next one — showing the next slot displays a rainy future forecast
+        // over a clear sky (observed). Earliest future slot is the fallback
+        // before the day's first forecast.
+        int cur_fd = 0, cur_ft = 0, nxt_fd = 0, nxt_ft = 0;
         const char* p = g_body;
         while (p && (p = strchr(p, '{'))) {
             const char* e = strchr(p + 1, '}');
             if (!e) break;
             long fd = item_num(p, e, "fcstDate");
             long ft = item_num(p, e, "fcstTime");
-            if (fd > 0 && ft >= 0 && (fd > today || (fd == today && ft >= want))) {
-                if (!best_fd || fd < best_fd || (fd == best_fd && ft < best_ft)) {
-                    best_fd = (int)fd;
-                    best_ft = (int)ft;
+            if (fd > 0 && ft >= 0) {
+                if (fd < today || (fd == today && ft <= want)) {
+                    if (!cur_fd || fd > cur_fd || (fd == cur_fd && ft > cur_ft)) {
+                        cur_fd = (int)fd;
+                        cur_ft = (int)ft;
+                    }
+                } else if (!nxt_fd || fd < nxt_fd || (fd == nxt_fd && ft < nxt_ft)) {
+                    nxt_fd = (int)fd;
+                    nxt_ft = (int)ft;
                 }
             }
             p = e + 1;
         }
+        int best_fd = cur_fd ? cur_fd : nxt_fd;
+        int best_ft = cur_fd ? cur_ft : nxt_ft;
+        int tmp = -1, sky = -1, pty = -1;
         if (best_fd) {
-            int tmp = -1, sky = -1, pty = -1;
             p = g_body;
             while (p && (p = strchr(p, '{'))) {
                 const char* e = strchr(p + 1, '}');
@@ -484,12 +499,38 @@ static void fetch_env(void) {
                 }
                 p = e + 1;
             }
-            if (tmp >= 0) {
-                env.temp = tmp;
-                env.sky = sky;
-                env.pty = pty;
-                env.have_wx = 1;
+        }
+        // current-hour truth: the KMA nowcast (observed) beats the forecast
+        // — the forecast can claim rain over a clear sky (observed PTY
+        // conflict), and the observed temp is fresher than the slot's
+        if (tmp >= 0) {
+            time_t nt = kst_now() - 40 * 60;
+            struct tm nb;
+            localtime_r(&nt, &nb);
+            snprintf(url, sizeof(url),
+                     "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/"
+                     "getUltraSrtNcst?serviceKey=%s&numOfRows=60&pageNo=1"
+                     "&base_date=%04d%02d%02d&base_time=%02d00&nx=%d&ny=%d&dataType=json",
+                     API_KEY, nb.tm_year + 1900, nb.tm_mon + 1, nb.tm_mday, nb.tm_hour,
+                     WX_GRID_X, WX_GRID_Y);
+            if (http_get(url)) {
+                p = g_body;
+                while (p && (p = strchr(p, '{'))) {
+                    const char* e = strchr(p + 1, '}');
+                    if (!e) break;
+                    char cat[8];
+                    if (item_str(p, e, "category", cat, sizeof(cat))) {
+                        long v = item_num(p, e, "obsrValue");
+                        if (!strcmp(cat, "PTY") && v >= 0) pty = (int)v;
+                        else if (!strcmp(cat, "T1H") && v > -90) tmp = (int)v;
+                    }
+                    p = e + 1;
+                }
             }
+            env.temp = tmp;
+            env.sky = sky;
+            env.pty = pty;
+            env.have_wx = 1;
         }
     }
     if (env.have_pm || env.have_wx) {
@@ -1182,11 +1223,12 @@ static void set_subtext(int i, time_t now) {
         sub_col = lv_color_hex(0x3399FF);
     }
     lv_obj_set_style_text_color(time2_labels[i], sub_col, 0);
-    // "--" only when the main is NOT live: an empty second-bus slot next to
-    // a live arrival is just "the feed reported one bus", an ordinary state.
-    // When the row claims a prediction (or nothing), an unknown next bus is
-    // real information worth showing.
-    if (sub[0] == 0 && !(rows[i].arrtime >= 0 && now - rows[i].fetched < 300))
+    // "--" only when the main is NOT live (same has_arrival/zombie condition
+    // that renders the live main number — a persisted arrtime is not live):
+    // an empty second-bus slot next to a live arrival is just "the feed
+    // reported one bus", an ordinary state. When the row claims a prediction
+    // (or nothing), an unknown next bus is real information worth showing.
+    if (sub[0] == 0 && !(rows[i].has_arrival || rows[i].zombie))
         snprintf(sub, sizeof(sub), "--");
     lv_label_set_text(time2_labels[i], sub);
 }
@@ -1308,9 +1350,11 @@ static void ui_update(void) {
             int learned_sub = c >= LEARNED_SUBTEXT_CONF &&
                 learner_next_now(i, &l1, &l2) && l2 > hm && l2 - hm <= 90;
             uint32_t col;
-            if (rs->has_arrival || rs->zombie ||
-                       (rows[i].arrtime >= 0 && now - rows[i].fetched < 300)) {
-                col = 0x4CAF50;   // live — same priority as the display: wins
+            if (rs->has_arrival || rs->zombie) {
+                // live — same condition that renders the live main number
+                // (arrtime persists when the feed drops a route, so it is
+                // NOT a live indicator by itself)
+                col = 0x4CAF50;
             } else if (learned_fill || learned_sub) {
                 // any learned prediction on the row gets the grade (the blue
                 // subtext alone can be the row's only claim, e.g. "--" main)
