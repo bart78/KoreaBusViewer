@@ -209,6 +209,29 @@ double learner_confidence(learner_t* l, int daytype) {
     return total ? (double)matched / total : 0;
 }
 
+/* per-slot quality: the same tightness measure as learner_confidence, but
+ * for ONE slot median. The route confidence is an average — a loose 3pm
+ * slot hides behind a tight 7am one. This lets the display gate claims
+ * per slot: a slot whose days scatter >3 min withholds itself. */
+double learner_slot_quality(learner_t* l, int daytype, int med) {
+    if (daytype < 0 || daytype >= LEARNER_DT_COUNT) return 0;
+    learner_ring_t* ring = &l->ring[daytype];
+    if (ring->n_days < LEARNER_MIN_RING) return 0;
+    int matched = 0, total = 0;
+    for (int k = 0; k < ring->n_days; k++) {
+        int best = 9999;
+        for (int i = 0; i < ring->days[k].n; i++) {
+            int diff = ring->days[k].arr[i] - med;
+            if (diff < 0) diff = -diff;
+            if (diff < best) best = diff;
+        }
+        if (best > LEARNER_MERGE_GAP_MIN) continue;
+        total++;
+        if (best <= LEARNER_TOLERANCE_MIN) matched++;
+    }
+    return total ? (double)matched / total : 0;
+}
+
 int learner_next(learner_t* l, int daytype, int now_min, int* next1, int* next2) {
     if (daytype < 0 || daytype >= LEARNER_DT_COUNT) return 0;
     learner_slot_t slots[LEARNER_MAX_SLOTS];

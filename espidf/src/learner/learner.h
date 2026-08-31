@@ -67,6 +67,7 @@ int learner_slots(learner_t* l, int daytype, learner_slot_t* out, int max);
 
 /* Reproducibility confidence in [0,1]; 0 if not enough data. */
 double learner_confidence(learner_t* l, int daytype);
+double learner_slot_quality(learner_t* l, int daytype, int med);
 
 /* Next and next-next expected arrivals after now_min. Returns 1 if found. */
 int learner_next(learner_t* l, int daytype, int now_min, int* next1, int* next2);

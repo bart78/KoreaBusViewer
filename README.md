@@ -82,9 +82,10 @@ Per route × day-type, the learner keeps the last 10 days of **confirmed arrival
 
 - `next(now)` → first slot after now with n ≥ 3; `next2` → the slot after it. O(slots), computed per display tick.
 - Display priority: **live data always wins** (structurally — the learned branch is unreachable when the feed reports the route). Otherwise:
-  - learned **fill** when confidence ≥ 0.60 and the slot is **5–90 min** out (inside 5 min, live silence reads as unknown → `--`);
-  - learned **subtext** (next2) when confidence ≥ 0.60 and ≤ 90 min out;
+  - learned **fill** when route confidence ≥ 0.60 **and the claimed slot's own quality ≥ 0.60** and the slot is **5–90 min** out (inside 5 min, live silence reads as unknown → `--`);
+  - learned **subtext** (next2) under the same two gates and ≤ 90 min out;
   - static schedule otherwise; `--` when nothing can be claimed.
+- **Per-slot quality**: each slot carries its own tightness (fraction of its days' arrivals within ±3 min of the median, same rule as the route confidence). A route average hides a loose 3 pm slot behind a tight 7 am one — so each slot must clear its own gate to claim, and the confidence dot grades a claim by that slot's quality, not the route's.
 
 ### 5.4 Embedded constraints
 
@@ -108,7 +109,9 @@ Per held-out day: 08/24 median 4 min (65% ≤5m) · 08/25 median 4 min (63%) · 
 
 The trajectory matters as much as the snapshot: with only 4 ring days, the static model's dense grid won the raw average (median 3 vs 5 min). At 6–7 ring days, the learned ring leads on every metric. Meanwhile the static model's error is bounded by half a headway *by construction* and it cannot improve — the ring improves with every day it lives.
 
-Per-route confidence after 7 weekday days: 32 → 0.78, 73 → 0.84, 310 → 0.79, **340 → 0.89** (up from 0.48 at 4 days — its learned fills are now displayed), 4103 → 0.82, 9409 → 0.69, 9507 → 0.84.
+Per-route confidence after 9 weekday days: 32 → 0.80, 73 → 0.80, 310 → 0.76, 340 → 0.87, 4103 → 0.81, 9409 → 0.66, 9507 → 0.86.
+
+**Slot-level gating (per-slot quality ≥ 0.60)** is the largest single accuracy lever: on the same 2,995 held-out arrivals, claims that pass the slot gate land at **median 2 min, 66% ≤3 min, 81% ≤5 min** (n=1,658) versus 4 min / 44% / 59% for all slots. Withholding the loose slots costs ~45% of claims and buys a 2× median-error improvement on what remains.
 
 ### 6.2 Field observations (live, one morning)
 
@@ -123,7 +126,7 @@ The ring inherits feed coverage. Route 310 logged only **10 confirmed arrivals i
 
 ## 7. Future Work
 
-- **Coverage-aware confidence** — weight confidence by how much of the service window has claimable slots (route 310 scores 0.79 while logging 10 confirmed arrivals in a full day against 129 sightings — the confirm path fails on it, and the metric can't tell).
+- **Coverage-aware route confidence** — the slot gate handles loose slots, but the route-level confidence still can't see coverage: route 310 scores 0.76 while its capture stays sparse (its days genuinely lack most arrivals, so slots have few samples to be tight about). Weight route confidence by the share of the service window with claimable slots.
 - **Fix 310's confirm path** — its predicted sightings fire often but the confirm conditions rarely do: the "2 silent polls" rule was a time threshold in disguise, and the slower polling cadence (45/120/180 s) silently stretched it to 4–6 min. **Done (Aug 31)**: the silence rule is now time-based (90 s of absence, poll-count-independent) and an id-less ETA-jump confirm (a close bus whose slot jumps >8 min outward, persisting one poll) covers continuously-reported feeds. Watch the capture-health table to verify 310 recovers to ~30+/day.
 - **Permanent held-out harness** — validate every night's ring against the next day automatically, in the tools, so each firmware change ships with a regression number.
 - **Manual-tap validation** — a companion tap app quantifies the miss rate per route (how many physical buses the feed never reports), turning feed blind spots into a measured number.

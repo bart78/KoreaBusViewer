@@ -160,6 +160,7 @@ static int learner_last_day;   // YYYYMMDD of the last day learned
 
 #define LEARNED_FILL_CONF     0.60  // min confidence to use learned fills
 #define LEARNED_SUBTEXT_CONF  0.60  // min confidence for the learned subtext
+#define LEARNED_SLOT_CONF     0.60  // min quality of the CLAIMED slot itself
 #define LEARNED_FILL_MIN_SECS 300   // learned fills show beyond this (5 min);
                                     // inside it, live silence reads as unknown
 
@@ -1098,13 +1099,21 @@ static void learner_learn_today(void) {
 }
 
 // learned next arrivals after now (minutes of day). Returns 1 if available.
-static int learner_next_now(int r, int* next1, int* next2) {
+// q1/q2 receive each slot's own tightness quality (the display gates claims
+// per slot — a loose slot withholds itself even on a tight route).
+static int learner_next_now(int r, int* next1, int* next2, double* q1, double* q2) {
     if (!learner_ready) return 0;
     time_t now = kst_now();
     struct tm t;
     localtime_r(&now, &t);
     int hm = t.tm_hour * 60 + t.tm_min;
-    return learner_next(&learners[r], learner_daytype_now(), hm, next1, next2);
+    int dt = learner_daytype_now();
+    int ok = learner_next(&learners[r], dt, hm, next1, next2);
+    if (ok) {
+        *q1 = learner_slot_quality(&learners[r], dt, *next1);
+        *q2 = (*next2 > 0) ? learner_slot_quality(&learners[r], dt, *next2) : 0;
+    }
+    return ok;
 }
 
 static double learner_conf_now(int r) {
@@ -1250,6 +1259,7 @@ static void set_subtext(int i, time_t now) {
     // next-bus estimate: the feed's current second bus wins (live trumps,
     // gray); the learned next2 fills only when the feed reports none (blue)
     int l1, l2;
+    double q1, q2;
     int hm = now_hm();
     lv_color_t sub_col = lv_color_hex(0x96969A);
     if (rows[i].arrtime2 >= 0 && now - rows[i].fetched < 240) {
@@ -1258,8 +1268,8 @@ static void set_subtext(int i, time_t now) {
         if (second_plausible(i, rem2))
             snprintf(sub, sizeof(sub), "+%dm", (rem2 + 59) / 60);
     } else if (learner_conf_now(i) >= LEARNED_SUBTEXT_CONF &&
-               learner_next_now(i, &l1, &l2) && l2 > hm &&
-               l2 - hm <= 90) {
+               learner_next_now(i, &l1, &l2, &q1, &q2) &&
+               q2 >= LEARNED_SLOT_CONF && l2 > hm && l2 - hm <= 90) {
         snprintf(sub, sizeof(sub), "+%dm", l2 - hm);
         sub_col = lv_color_hex(0x3399FF);
     }
@@ -1384,12 +1394,14 @@ static void ui_update(void) {
         {
             double c = learner_conf_now(i);
             int l1, l2;
+            double q1, q2;
             int secs_now = hm * 60 + t.tm_sec;
-            int learned_fill = c >= LEARNED_FILL_CONF &&
-                learner_next_now(i, &l1, &l2) &&
+            int has_nxt = learner_next_now(i, &l1, &l2, &q1, &q2);
+            int learned_fill = c >= LEARNED_FILL_CONF && has_nxt &&
+                q1 >= LEARNED_SLOT_CONF &&
                 l1 * 60 - secs_now > LEARNED_FILL_MIN_SECS && l1 - hm < 90;
-            int learned_sub = c >= LEARNED_SUBTEXT_CONF &&
-                learner_next_now(i, &l1, &l2) && l2 > hm && l2 - hm <= 90;
+            int learned_sub = c >= LEARNED_SUBTEXT_CONF && has_nxt &&
+                q2 >= LEARNED_SLOT_CONF && l2 > hm && l2 - hm <= 90;
             uint32_t col;
             if (rs->has_arrival || rs->zombie) {
                 // live — same condition that renders the live main number
@@ -1397,9 +1409,12 @@ static void ui_update(void) {
                 // NOT a live indicator by itself)
                 col = 0x4CAF50;
             } else if (learned_fill || learned_sub) {
-                // any learned prediction on the row gets the grade (the blue
-                // subtext alone can be the row's only claim, e.g. "--" main)
-                col = c >= 0.80 ? 0x4CAF50 : (c >= 0.70 ? 0xFFD400 : 0xA03030);
+                // any learned prediction on the row gets the grade — the
+                // CLAIM's own slot quality, not the route average: a tight
+                // slot is trustworthy even on a middling route, and a loose
+                // slot on a tight route is withheld by the gate above
+                double q = learned_fill ? q1 : q2;
+                col = q >= 0.80 ? 0x4CAF50 : (q >= 0.70 ? 0xFFD400 : 0xA03030);
             } else if (rc->has_sched) {
                 int hw = we ? rc->hw_weekend : (is_peak_now() ? rc->hw_commute : rc->hw_weekday);
                 int first_at_stop = rc->first_hm + rc->to_stop;
@@ -1536,10 +1551,14 @@ static void ui_update(void) {
             rs->disp = -1;
         }
         // learned fill: a trustworthy learned next arrival replaces the
-        // static estimate / "--" with a blue countdown (live still trumps)
+        // static estimate / "--" with a blue countdown (live still trumps).
+        // Both the route confidence AND this slot's own quality must clear
+        // the gate — a loose slot withholds itself on a tight route.
         if (learner_conf_now(i) >= LEARNED_FILL_CONF) {
             int l1, l2;
-            if (learner_next_now(i, &l1, &l2)) {
+            double q1, q2;
+            if (learner_next_now(i, &l1, &l2, &q1, &q2) &&
+                q1 >= LEARNED_SLOT_CONF) {
                 int rem_s = l1 * 60 - (hm * 60 + t.tm_sec);
                 // learned fills respect the live-reporting window: inside
                 // ~15 min, live silence means unknown — show "--" instead

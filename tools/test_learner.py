@@ -45,7 +45,7 @@ def reference(days):
             slots = models[num].slots(dt)
             conf = models[num].confidence(dt)
             anom = models[num].anomaly_days
-            s = ' '.join(f'{int(s[0])}:{s[1]}' for s in slots)
+            s = ' '.join(f'{int(s[0])}:{s[1]}:{models[num].slot_quality(dt, s[0]):.4f}' for s in slots)
             out.append(f'route {num} dt {dt} slots {len(slots)} conf {conf:.4f} anom {anom}' + (f' {s}' if s else ''))
     return '\n'.join(out) + '\n'
 

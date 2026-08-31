@@ -144,6 +144,23 @@ class RouteModel:
                         matched += 1
             return matched / total
 
+    def slot_quality(self, daytype, med):
+        """Same tightness measure, for one slot median (the display gates
+        claims per slot: a loose slot withholds itself)."""
+        ring = self.ring[daytype]
+        if len(ring) < 3:
+            return 0
+        matched = 0
+        total = 0
+        for d in ring:
+            near = [m for m in d if abs(m - med) <= MERGE_GAP]
+            if not near:
+                continue
+            total += 1
+            if min(abs(m - med) for m in near) <= TOLERANCE:
+                matched += 1
+        return matched / total if total else 0
+
 def fmt(m):
     return f'{int(m // 60):02d}:{int(m % 60):02d}'
 

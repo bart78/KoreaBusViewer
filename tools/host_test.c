@@ -50,7 +50,8 @@ int main(void) {
             printf("route %d dt %d slots %d conf %.4f anom %d",
                    route_ids[i], dt, ns, conf, anom);
             for (int s = 0; s < ns; s++)
-                printf(" %d:%d", slots[s].med, slots[s].n);
+                printf(" %d:%d:%.4f", slots[s].med, slots[s].n,
+                       learner_slot_quality(&learners[i], dt, slots[s].med));
             printf("\n");
         }
     }
