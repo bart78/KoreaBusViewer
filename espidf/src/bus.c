@@ -73,6 +73,11 @@ static const char* TAG = "BUS";
 #define LOG_PREDICT_SECS  240
 #define LOG_CONFIRM_SECS  240
 #define LOG_REARM_SECS    300
+// the silence-based confirm waits for THIS much continuous absence, not a
+// poll count: "2 silent polls" was a time threshold in disguise, and the
+// slower polling cadence (45/120/180s) silently stretched it to 4-6 min,
+// starving id-less routes whose feeds only drop for a poll or two (310)
+#define CONFIRM_SILENT_SECS 90
 
 // how long "ARRIVING" stays on screen after a confirmed arrival before the
 // row moves on to the next bus / schedule placeholder
@@ -131,6 +136,7 @@ typedef struct {
     // the vanish survives (roll / 2 silent polls); state survives polls
     int confirm_pending;  // a close bus vanished and silence is being counted
     int silent_polls;     // consecutive silent polls since the vanish
+    int jump_pending;     // id-less ETA jump seen once; needs one more poll
     int pend_eta;         // last ETA of the vanished bus (arrival timestamp)
     time_t pend_fetch;    // fetch time of that last sighting
 } row_state_t;
@@ -592,6 +598,12 @@ static void fetch_arrivals(void) {
             int jumped = rows[r].has_arrival && old_veh >= 0 &&
                          rows[r].veh < 0 &&
                          rows[r].arrtime > old_eta + 480;
+            // id-less feeds (TAGO): the ETA jump IS the only roll signal —
+            // a close bus whose slot jumps far out has passed. Require the
+            // far state to persist one more poll so a requantized ETA (GBIS
+            // jumps like 137->893) can't fake a pass.
+            int jp = rows[r].has_arrival && old_veh < 0 &&
+                     rows[r].arrtime > old_eta + 480;
             if (roll || jumped) {
                 // a vanish of a vehicle already confirmed within the last
                 // 10 min is the feed's post-pass flicker, not another arrival
@@ -610,7 +622,30 @@ static void fetch_arrivals(void) {
                     rows[r].arrived_at = now;
                 rows[r].confirm_pending = 0;
                 rows[r].silent_polls = 0;
+                rows[r].jump_pending = 0;
                 rows[r].rel_pending = 0;   // normal confirm supersedes
+            } else if (jp) {
+                if (!rows[r].jump_pending) {
+                    rows[r].jump_pending = 1;
+                    rows[r].pend_eta = old_eta;
+                    rows[r].pend_fetch = old_fetch;
+                    rows[r].confirm_pending = 0;
+                    rows[r].silent_polls = 0;
+                } else {
+                    int dup = old_veh >= 0 && old_veh == rows[r].veh_confirmed &&
+                              now - rows[r].veh_conf_at < 600;
+                    if (!dup) {
+                        log_arrival(r, rows[r].pend_fetch + rows[r].pend_eta, 1);
+                        rows[r].veh_confirmed = old_veh;
+                        rows[r].veh_conf_at = now;
+                    }
+                    rows[r].arrived_at = rows[r].pend_fetch + rows[r].pend_eta;
+                    if (now - rows[r].arrived_at >
+                        ARRIVING_SHOW_SECS + JUST_LEFT_SHOW_SECS)
+                        rows[r].arrived_at = now;
+                    rows[r].jump_pending = 0;
+                    rows[r].rel_pending = 0;
+                }
             } else if (!rows[r].has_arrival) {
                 if (!rows[r].confirm_pending) {
                     rows[r].pend_eta = old_eta;
@@ -618,7 +653,9 @@ static void fetch_arrivals(void) {
                     rows[r].confirm_pending = 1;
                     rows[r].silent_polls = 0;
                 }
-                if (++rows[r].silent_polls >= 2) {
+                // time-based silence: the absence duration, not the poll
+                // count, is the evidence (see CONFIRM_SILENT_SECS)
+                if (now - rows[r].pend_fetch >= CONFIRM_SILENT_SECS) {
                     int dup = old_veh >= 0 && old_veh == rows[r].veh_confirmed &&
                               now - rows[r].veh_conf_at < 600;
                     if (!dup) {
@@ -631,20 +668,24 @@ static void fetch_arrivals(void) {
                         ARRIVING_SHOW_SECS + JUST_LEFT_SHOW_SECS)
                         rows[r].arrived_at = now;
                     rows[r].confirm_pending = 0;
+                    rows[r].jump_pending = 0;
                     rows[r].rel_pending = 0;   // normal confirm supersedes
                 }
             } else {
                 rows[r].confirm_pending = 0;
                 rows[r].silent_polls = 0;
+                rows[r].jump_pending = 0;
             }
         } else if (rows[r].confirm_pending && !rows[r].has_arrival) {
-            if (++rows[r].silent_polls >= 2) {
+            if (now - rows[r].pend_fetch >= CONFIRM_SILENT_SECS) {
                 log_arrival(r, rows[r].pend_fetch + rows[r].pend_eta, 1);
                 rows[r].confirm_pending = 0;
+                rows[r].jump_pending = 0;
             }
         } else {
             rows[r].confirm_pending = 0;
             rows[r].silent_polls = 0;
+            rows[r].jump_pending = 0;
         }
 
         // outage arrival pending: resolved now that the feed is back.
@@ -1421,6 +1462,7 @@ static void ui_update(void) {
                     rs->rel_pending = 1;   // log once the feed returns
                     rs->rel_due = rs->arrived_at;
                     rs->zombie = 0;
+                    rs->jump_pending = 0;
                     rs->last_eta = 0;
                 }
             }
@@ -1446,6 +1488,7 @@ static void ui_update(void) {
                     rs->due_at = 0;
                     rs->rel_pending = 1;   // log once the feed returns
                     rs->rel_due = anchor;
+                    rs->jump_pending = 0;
                     lv_label_set_text(time1_labels[i], "--");
                     lv_obj_set_style_text_color(time1_labels[i], lv_color_hex(0x505860), 0);
                 }
@@ -1637,7 +1680,10 @@ static void refresh_task(void* arg) {
             int cad = cadence_now();
             if (cad < 0) {
                 // night: schedule-only display, no API calls, lights out
-                for (int i = 0; i < N_ROWS; i++) rows[i].has_arrival = 0;
+                for (int i = 0; i < N_ROWS; i++) {
+                    rows[i].has_arrival = 0;
+                    rows[i].jump_pending = 0;
+                }
                 learner_learn_today();   // the day is complete: learn it
                 if (backlight_on) {
                     bsp_display_brightness_set(0);

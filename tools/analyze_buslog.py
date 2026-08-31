@@ -126,5 +126,24 @@ def main(path):
                   f'unmatched predicted (phantom)={len(ph)}, unpaired confirmed={len(ms)}'
                   + (f' phantom@' + ','.join(fmt(m) for m in ph[:8]) if ph else ''))
 
+    print()
+    print('=== Capture health (per day, per route: confirmed/predicted) ===')
+    print('A route whose predicted:confirmed ratio is high loses ground truth:')
+    print('the board saw the buses approaching but could not prove the passes.')
+    for d in days:
+        if d['hol']:
+            continue
+        fields = {}
+        for t, ri, mm, _ in d['events']:
+            fields.setdefault(ri, [0, 0])
+            fields[ri][t] += 1
+        line = [f"{d['date']:%m/%d} {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d['wd']]}"]
+        for ri, no in enumerate(ROUTES):
+            p, c = fields.get(ri, [0, 0])
+            ratio = p / c if c else 0
+            flag = '!' if ratio > 3.5 else ('?' if ratio > 2.5 else ' ')
+            line.append(f'{no}:{c}/{p}{flag}')
+        print(' '.join(line))
+
 if __name__ == '__main__':
     main(sys.argv[1] if len(sys.argv) > 1 else 'nvs.bin')

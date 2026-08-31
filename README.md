@@ -124,7 +124,7 @@ The ring inherits feed coverage. Route 310 logged only **10 confirmed arrivals i
 ## 7. Future Work
 
 - **Coverage-aware confidence** — weight confidence by how much of the service window has claimable slots (route 310 scores 0.79 while logging 10 confirmed arrivals in a full day against 129 sightings — the confirm path fails on it, and the metric can't tell).
-- **Fix 310's confirm path** — its predicted sightings fire often but the vehicle-id roll / silence conditions rarely do; the confirm logic needs a third path for TAGO-style feeds.
+- **Fix 310's confirm path** — its predicted sightings fire often but the confirm conditions rarely do: the "2 silent polls" rule was a time threshold in disguise, and the slower polling cadence (45/120/180 s) silently stretched it to 4–6 min. **Done (Aug 31)**: the silence rule is now time-based (90 s of absence, poll-count-independent) and an id-less ETA-jump confirm (a close bus whose slot jumps >8 min outward, persisting one poll) covers continuously-reported feeds. Watch the capture-health table to verify 310 recovers to ~30+/day.
 - **Permanent held-out harness** — validate every night's ring against the next day automatically, in the tools, so each firmware change ships with a regression number.
 - **Manual-tap validation** — a companion tap app quantifies the miss rate per route (how many physical buses the feed never reports), turning feed blind spots into a measured number.
 - **Per-route gate tuning** — ride-time-aware windows (a route whose origin is 12 min away has a different honest window than a 40-min route).
