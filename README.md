@@ -6,7 +6,7 @@ An ESP32-S3 signboard for a single Korean bus stop that shows **live arrival cou
 
 - One board, one stop (STOP 07593, Seongnam/Gyeonggi), seven routes (32, 73, 310, 340, 4103, 9409, 9507). Live data from two government APIs (GBIS + TAGO), merged; a static schedule and an **on-device learner** as fallbacks.
 - The board logs every arrival it witnesses to flash (60 days). At boot, a portable, dependency-free C learner rebuilds per-route **arrival rings** from that log and, when the feed is silent, shows learned predictions — **only when confident, otherwise an honest `--`**.
-- Held-out validation (leave-one-out across 3 full days, 953 logged arrivals): the learned ring beats the static headway model on every metric — **median error 4 vs 5 min, 61% vs 53% within ±5 min** — and the gap grows with every day the ring lives.
+- Held-out validation (leave-one-out across 9 full days, 2,995 logged arrivals): the learned ring beats the static headway model on every metric — **median 4 vs 5 min, 59% vs 53% within ±5 min**. With **per-slot quality gating**, the claims the board actually shows land at **median 2 min, 81% within ±5 min** — the loose slots withhold themselves instead of eroding trust.
 - Everything — logging, learning, display, honesty rules — runs on the board. No server, no account, no phone required.
 
 ## 2. Background & Motivation
