@@ -72,6 +72,12 @@ static const char* TAG = "BUS";
 // confirmed window. Buses beyond LOG_REARM_SECS re-arm the predicted dedupe.
 #define LOG_PREDICT_SECS  240
 #define LOG_CONFIRM_SECS  240
+// the roll/jump confirm paths may track buses up to this far out: feeds
+// with coarse ETA updates (5-min quantization on the id-less side) never
+// enter the 240s close window before a pass, so those buses were displayed
+// but never confirmable. The ID roll is decisive (an ID change IS the pass)
+// and the id-less jump already requires 2-poll persistence.
+#define LOG_ROLL_SECS     480
 #define LOG_REARM_SECS    300
 // the silence-based confirm waits for THIS much continuous absence, not a
 // poll count: "2 silent polls" was a time threshold in disguise, and the
@@ -590,7 +596,7 @@ static void fetch_arrivals(void) {
         //  - feed silence: the merged feed stopped reporting the route;
         //    requires 2 consecutive silent polls so a one-poll feed blip
         //    (bus reappears, still approaching) is not counted as an arrival
-        if (old_has && old_eta <= LOG_CONFIRM_SECS) {
+        if (old_has && old_eta <= LOG_ROLL_SECS) {
             int roll = rows[r].has_arrival && old_veh >= 0 &&
                        rows[r].veh >= 0 && rows[r].veh != old_veh;
             // a close bus jumped far out (>8 min) and the new vehicle id is
@@ -647,7 +653,7 @@ static void fetch_arrivals(void) {
                     rows[r].jump_pending = 0;
                     rows[r].rel_pending = 0;
                 }
-            } else if (!rows[r].has_arrival) {
+            } else if (!rows[r].has_arrival && old_eta <= LOG_CONFIRM_SECS) {
                 if (!rows[r].confirm_pending) {
                     rows[r].pend_eta = old_eta;
                     rows[r].pend_fetch = old_fetch;
