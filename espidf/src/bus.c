@@ -596,6 +596,29 @@ static void fetch_arrivals(void) {
         //  - feed silence: the merged feed stopped reporting the route;
         //    requires 2 consecutive silent polls so a one-poll feed blip
         //    (bus reappears, still approaching) is not counted as an arrival
+        // pending id-less jump: armed when a close bus's slot jumped far.
+        // The persistence poll is far BY DEFINITION (>8 min), so it can
+        // never re-enter the close-window gate below — resolve it here.
+        if (rows[r].jump_pending) {
+            if (!rows[r].has_arrival || rows[r].arrtime > rows[r].pend_eta + 480) {
+                // still absent or still far one poll later: the pass is real
+                int dup = old_veh >= 0 && old_veh == rows[r].veh_confirmed &&
+                          now - rows[r].veh_conf_at < 600;
+                if (!dup) {
+                    log_arrival(r, rows[r].pend_fetch + rows[r].pend_eta, 1);
+                    rows[r].veh_confirmed = old_veh;
+                    rows[r].veh_conf_at = now;
+                }
+                rows[r].arrived_at = rows[r].pend_fetch + rows[r].pend_eta;
+                if (now - rows[r].arrived_at >
+                    ARRIVING_SHOW_SECS + JUST_LEFT_SHOW_SECS)
+                    rows[r].arrived_at = now;
+                rows[r].jump_pending = 0;
+                rows[r].rel_pending = 0;
+            } else {
+                rows[r].jump_pending = 0;   // a close ETA returned: noise
+            }
+        }
         if (old_has && old_eta <= LOG_ROLL_SECS) {
             int roll = rows[r].has_arrival && old_veh >= 0 &&
                        rows[r].veh >= 0 && rows[r].veh != old_veh;
@@ -638,20 +661,6 @@ static void fetch_arrivals(void) {
                     rows[r].pend_fetch = old_fetch;
                     rows[r].confirm_pending = 0;
                     rows[r].silent_polls = 0;
-                } else {
-                    int dup = old_veh >= 0 && old_veh == rows[r].veh_confirmed &&
-                              now - rows[r].veh_conf_at < 600;
-                    if (!dup) {
-                        log_arrival(r, rows[r].pend_fetch + rows[r].pend_eta, 1);
-                        rows[r].veh_confirmed = old_veh;
-                        rows[r].veh_conf_at = now;
-                    }
-                    rows[r].arrived_at = rows[r].pend_fetch + rows[r].pend_eta;
-                    if (now - rows[r].arrived_at >
-                        ARRIVING_SHOW_SECS + JUST_LEFT_SHOW_SECS)
-                        rows[r].arrived_at = now;
-                    rows[r].jump_pending = 0;
-                    rows[r].rel_pending = 0;
                 }
             } else if (!rows[r].has_arrival && old_eta <= LOG_CONFIRM_SECS) {
                 if (!rows[r].confirm_pending) {
