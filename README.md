@@ -137,8 +137,8 @@ Two feed-side holes remain, honest rather than fixed: route 32's evenings (the f
 
 - **Coverage-aware route confidence** — the slot gate handles loose slots, but the route-level confidence still can't see coverage. Weight route confidence by the share of the service window with claimable slots.
 - **The remaining feed-side holes** — route 32's evenings (feed-dependent capture) and 310's high-variance evenings: more data, not looser gates, is the only honest fix.
-- **Permanent held-out harness** — validate every night's ring against the next day automatically, in the tools, so each firmware change ships with a regression number.
-- **Manual-tap validation** — a companion tap app quantifies the miss rate per route (how many physical buses the feed never reports), turning feed blind spots into a measured number. Already demonstrated: 4 taps caught route 4103's systematic 07:30 capture hole.
+- **Permanent held-out harness** — the leave-one-out machinery exists (on demand, in the tools — it produced §6.1 and caught the alignment regression within a day). What remains is wrapping it as an automatic nightly run so every firmware change ships with a regression number without anyone asking.
+- **Manual-tap validation** — demonstrated (§6.2's field observations and the 4103 07:30 hole came from 32 taps); the tool exists (`cross_check.py`). What remains is *coverage*, not machinery: more taps in the sparse windows (weekday afternoons, weekends) to turn the per-route miss-rate numbers from suggestive into stable.
 - **Per-route gate tuning** — ride-time-aware windows (a route whose origin is 12 min away has a different honest window than a 40-min route).
 - **The commute planner** — the ring generalizes to multiple stops/legs; a planner would optimize best-leave-time over walk + bus + subway distributions. (Separate project.)
 
