@@ -73,6 +73,20 @@ def main():
         'routes': {},
     }
 
+    # static cold-start config (mirrors the board's ROWS[]): the fallback
+    # schedule for times the ring cannot claim. Renderers show it only when
+    # no slot is claimable, visually distinct (e.g. "~21:3X"), and show "--"
+    # inside the 5-minute window (same honesty rule as the board).
+    static_cfg = {
+        '32':  {'hw_commute': 8,  'hw_weekday': 13, 'hw_weekend': 15, 'first': 350, 'last': 1400, 'to_stop': 15},
+        '73':  {'hw_commute': 11, 'hw_weekday': 20, 'hw_weekend': 35, 'first': 390, 'last': 1200, 'to_stop': 8},
+        '310': {'hw_commute': 15, 'hw_weekday': 25, 'hw_weekend': 35, 'first': 300, 'last': 1350, 'to_stop': 20},
+        '340': {'hw_commute': 17, 'hw_weekday': 27, 'hw_weekend': 40, 'first': 280, 'last': 1320, 'to_stop': 12},
+        '4103': {'hw_commute': 20, 'hw_weekday': 40, 'hw_weekend': 40, 'first': 270, 'last': 1380, 'to_stop': 8},
+        '9409': {'hw_commute': 22, 'hw_weekday': 25, 'hw_weekend': 33, 'first': 280, 'last': 1350, 'to_stop': 20},
+        '9507': {'hw_commute': 25, 'hw_weekday': 33, 'hw_weekend': 40, 'first': 310, 'last': 1350, 'to_stop': 20},
+    }
+
     for no in ROUTES:
         model = RouteModel(no)
         for date, hol, evs in days:
@@ -100,10 +114,11 @@ def main():
                 'slots': sl,
             }
         out['routes'][str(no)] = rt
+        rt['static'] = static_cfg[str(no)]
 
     with open(sys.argv[2], 'w') as f:
         json.dump(out, f, indent=1)
-    n = sum(len(rt[d]['slots']) for rt in out['routes'].values() for d in rt)
+    n = sum(len(rt[d]['slots']) for rt in out['routes'].values() for d in ('weekday', 'weekend'))
     print(f'exported {len(out["routes"])} routes, {n} slots -> {sys.argv[2]}')
     return 0
 
