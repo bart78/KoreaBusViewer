@@ -31,6 +31,12 @@ from parse_nvs import load_nvs, decode_events, ROUTES
 from learn_schedule import (RouteModel, dedupe, DAY_WEEKDAY, DAY_WEEKEND,
                             MERGE_GAP)
 
+# window margin: the observed min..max underestimates the true range —
+# held-out days land outside it 26% of the time (median extension 3m).
+# A 5-minute margin restores the envelope to a genuine ~90%+ claim for
+# the arrivals the display actually claims (near their slot).
+WIN_MARGIN = 5
+
 DT_NAME = {DAY_WEEKDAY: 'weekday', DAY_WEEKEND: 'weekend'}
 
 
@@ -106,7 +112,8 @@ def main():
                 early = min(samples) if samples else med
                 late = max(samples) if samples else med
                 q = model.slot_quality(dt, med)
-                sl.append({'med': med, 'early': early, 'late': late,
+                sl.append({'med': med, 'early': early - WIN_MARGIN,
+                           'late': late + WIN_MARGIN,
                            'n': n, 'q': round(q, 3),
                            'claimable': n >= 3 and q >= 0.60})
             rt[DT_NAME[dt]] = {
