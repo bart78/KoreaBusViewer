@@ -23,6 +23,7 @@
 #define LEARNER_DT_COUNT   2
 
 #define LEARNER_DEDUPE_MIN    3   /* dedupe arrivals closer than this */
+#define LEARNER_ALIGN_TOL_MIN 15  /* time-anchored match tolerance (min) */
 #define LEARNER_MERGE_GAP_MIN 6   /* merge aligned columns closer than this */
 #define LEARNER_TOLERANCE_MIN 3   /* confidence match tolerance */
 #define LEARNER_MIN_DAY_FRAC  0.6 /* anomaly scoring day-completeness gate */

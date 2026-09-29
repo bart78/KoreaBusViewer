@@ -107,12 +107,22 @@ void learner_learn_day(learner_t* l, int daytype, const int* arrivals, int n) {
     /* completeness gate: a partial day (board unplugged, capture gap)
      * cannot be ordinally aligned — its few arrivals land in arbitrary
      * columns and skew every slot's median. Skip it once the ring has a
-     * reference to judge against. */
+     * reference to judge against. The COUNT gate alone misses days that
+     * reach 60% of the arrivals but STARTED late (their compressed
+     * ordinals shift every evening column) — so also require the day to
+     * SPAN most of the service window. */
     if (ring->n_days >= LEARNER_MIN_RING) {
         int lens[LEARNER_RING_DAYS];
-        for (int i = 0; i < ring->n_days; i++) lens[i] = ring->days[i].n;
+        int spans[LEARNER_RING_DAYS];
+        for (int i = 0; i < ring->n_days; i++) {
+            lens[i] = ring->days[i].n;
+            spans[i] = ring->days[i].arr[ring->days[i].n - 1] -
+                       ring->days[i].arr[0];
+        }
         int med_len = median_int(lens, ring->n_days);
         if (n < LEARNER_MIN_DAY_FRAC * med_len) return;
+        int med_span = median_int(spans, ring->n_days);
+        if (in.arr[n - 1] - in.arr[0] < LEARNER_MIN_DAY_FRAC * med_span) return;
     }
 
     if (shifted_vs_ring(ring, arrivals, n))
@@ -135,66 +145,88 @@ int learner_score_day(learner_t* l, int daytype, const int* arrivals, int n) {
     return shifted_vs_ring(&l->ring[daytype], arrivals, n);
 }
 
+/* time-anchored alignment buffers (module-static: the learner is single-
+ * threaded; keeps big arrays off the caller's stack) */
+static int scol[LEARNER_MAX_ARR][LEARNER_RING_DAYS];
+static int scnt[LEARNER_MAX_ARR];
+
 int learner_slots(learner_t* l, int daytype, learner_slot_t* out, int max) {
     if (daytype < 0 || daytype >= LEARNER_DT_COUNT) return 0;
     learner_ring_t* ring = &l->ring[daytype];
     if (ring->n_days == 0 || max <= 0) return 0;
 
+    /* reference: the longest day (densest) */
     int longest = 0;
     for (int i = 1; i < ring->n_days; i++)
         if (ring->days[i].n > ring->days[longest].n) longest = i;
+    int nref = ring->days[longest].n;
+    const int* refs = ring->days[longest].arr;
 
-    double meds[LEARNER_MAX_SLOTS];
-    int ns = 0;
-    for (int i = 0; i < ring->days[longest].n && ns < LEARNER_MAX_SLOTS; i++) {
-        double col[LEARNER_RING_DAYS];
-        int nc = 0;
-        for (int k = 0; k < ring->n_days; k++)
-            if (i < ring->days[k].n) col[nc++] = ring->days[k].arr[i];
-        if (nc > 0) {
-            /* median, matching statistics.median (even counts average) */
-            qsort(col, nc, sizeof(double), cmp_dbl);
-            meds[ns++] = (col[(nc - 1) / 2] + col[nc / 2]) / 2.0;
+    /* TIME-ANCHORED alignment: each day's arrivals match the nearest
+     * unused reference point within LEARNER_ALIGN_TOL_MIN, one-to-one.
+     * Ordinal alignment drifts when day counts vary (capture noise) and
+     * smears evening columns (medians landing between real trips, q -> 0);
+     * time-anchoring survives the drift. */
+    for (int j = 0; j < nref; j++) scnt[j] = 0;
+    for (int k = 0; k < ring->n_days; k++) {
+        int used[LEARNER_MAX_ARR] = {0};
+        for (int i = 0; i < ring->days[k].n; i++) {
+            int a = ring->days[k].arr[i];
+            int best = 9999, bi = -1;
+            for (int j = 0; j < nref; j++) {
+                if (used[j]) continue;
+                int dist = a - refs[j];
+                if (dist < 0) dist = -dist;
+                if (dist < best) { best = dist; bi = j; }
+            }
+            if (bi >= 0 && best <= LEARNER_ALIGN_TOL_MIN)
+                scol[bi][scnt[bi]++] = a, used[bi] = 1;
         }
     }
 
-    /* merge close columns (ordinal alignment splits one arrival); keep the
-     * medians as doubles, sorted (columns are not monotonic when a day
-     * drifts), and round only at the end */
+    double mmeds[LEARNER_MAX_SLOTS];
+    int mcnt[LEARNER_MAX_SLOTS];
+    int nslots = 0;
+    for (int j = 0; j < nref && nslots < LEARNER_MAX_SLOTS; j++) {
+        if (scnt[j] == 0) continue;
+        qsort(scol[j], scnt[j], sizeof(int), cmp_int);
+        int nc = scnt[j];
+        mmeds[nslots] = (scol[j][(nc - 1) / 2] + scol[j][nc / 2]) / 2.0;
+        mcnt[nslots] = nc;
+        nslots++;
+    }
+
+    /* merge close columns (one arrival can match two references); keep the
+     * medians as doubles, sorted, and round only at the end */
     int order[LEARNER_MAX_SLOTS];
-    for (int i = 0; i < ns; i++) order[i] = i;
-    for (int i = 1; i < ns; i++) {
+    for (int i = 0; i < nslots; i++) order[i] = i;
+    for (int i = 1; i < nslots; i++) {
         int j = i;
-        while (j > 0 && meds[order[j]] < meds[order[j - 1]]) {
+        while (j > 0 && mmeds[order[j]] < mmeds[order[j - 1]]) {
             int t = order[j]; order[j] = order[j - 1]; order[j - 1] = t;
             j--;
         }
     }
-    double mmeds[LEARNER_MAX_SLOTS];
-    int mcnt[LEARNER_MAX_SLOTS];
-    int nslots = 0;
-    for (int oi = 0; oi < ns; oi++) {
+    int nsl = 0;
+    for (int oi = 0; oi < nslots; oi++) {
         int i = order[oi];
-        int cn = 0;
-        for (int k = 0; k < ring->n_days; k++)
-            if (i < ring->days[k].n) cn++;
-        if (nslots == 0 || meds[i] - mmeds[nslots - 1] > LEARNER_MERGE_GAP_MIN) {
-            mmeds[nslots] = meds[i];
-            mcnt[nslots] = cn;
-            nslots++;
+        if (nsl == 0 || mmeds[i] - mmeds[nsl - 1] > LEARNER_MERGE_GAP_MIN) {
+            mmeds[nsl] = mmeds[i];
+            mcnt[nsl] = mcnt[i];
+            nsl++;
         } else {
-            int total = mcnt[nslots - 1] + cn;
-            mmeds[nslots - 1] =
-                (mmeds[nslots - 1] * mcnt[nslots - 1] + meds[i] * cn) / total;
-            mcnt[nslots - 1] = total;
+            int total = mcnt[nsl - 1] + mcnt[i];
+            mmeds[nsl - 1] =
+                (mmeds[nsl - 1] * mcnt[nsl - 1] + mmeds[i] * mcnt[i]) / total;
+            mcnt[nsl - 1] = total;
         }
-        if (nslots >= max) break;
+        if (nsl >= max) break;
     }
-    for (int s = 0; s < nslots; s++) {
+    for (int s = 0; s < nsl; s++) {
         out[s].med = round_banker(mmeds[s]);
         out[s].n = mcnt[s];
     }
-    return nslots;
+    return nsl;
 }
 
 double learner_confidence(learner_t* l, int daytype) {

@@ -44,20 +44,35 @@ def daytype(date, holidays, hol_flag=False):
     return DAY_WEEKEND if date.weekday() >= 5 else DAY_WEEKDAY
 
 MERGE_GAP = 6      # merge aligned columns closer than this (missed-bus shift)
+ALIGN_TOL = 15     # time-anchored alignment match tolerance (minutes)
 MIN_DAY_FRAC = 0.6 # anomaly scoring needs a day at least this complete
 TOLERANCE = 3      # confidence match tolerance (minutes around a slot)
 
 def aligned_medians(days):
     if not days:
         return []
-    n = max(len(d) for d in days)
+    # TIME-ANCHORED alignment: each day's arrivals match the nearest unused
+    # reference point (the longest day's arrivals) within ALIGN_TOL,
+    # one-to-one. Ordinal alignment drifts when day counts vary (capture
+    # noise) and smears evening columns; time-anchoring survives the drift.
+    ref = sorted(max(days, key=len))
+    cols = [[] for _ in ref]
+    for d in days:
+        used = [False] * len(ref)
+        for a in d:
+            best, bi = 9999, -1
+            for i, r in enumerate(ref):
+                if not used[i]:
+                    dist = abs(a - r)
+                    if dist < best:
+                        best, bi = dist, i
+            if bi >= 0 and best <= ALIGN_TOL:
+                cols[bi].append(a)
+                used[bi] = True
     positions = []
-    for i in range(n):
-        col = [d[i] for d in days if i < len(d)]
-        if col:
-            positions.append([statistics.median(col), len(col)])
-    # ordinal alignment splits one real arrival into two columns when a day
-    # missed a bus (everything shifts by one position) — merge close columns
+    for c in cols:
+        if c:
+            positions.append([statistics.median(c), len(c)])
     merged = []
     for med, cnt in sorted(positions):
         if merged and med - merged[-1][0] <= MERGE_GAP:
@@ -84,8 +99,14 @@ class RouteModel:
         if len(ring) >= 3:  # MIN_RING: need a reference to judge against
             # completeness gate: a partial day (board unplugged, capture
             # gap) cannot be ordinally aligned — its few arrivals land in
-            # arbitrary columns and skew every slot's median
+            # arbitrary columns and skew every slot's median. The count
+            # gate alone misses days that reach 60% of the arrivals but
+            # STARTED late (compressed ordinals shift every evening
+            # column), so also require the day to span the service window.
             if len(arrivals) < MIN_DAY_FRAC * statistics.median(len(d) for d in ring):
+                return
+            med_span = statistics.median(d[-1] - d[0] for d in ring)
+            if arrivals[-1] - arrivals[0] < MIN_DAY_FRAC * med_span:
                 return
         shifted, gated = self.score_day(self.ring[daytype], arrivals)
         if shifted:

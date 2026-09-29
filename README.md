@@ -74,8 +74,8 @@ Per route × day-type, the learner keeps the last 10 days of **confirmed arrival
 
 ### 5.2 Alignment, slots, and anomalies
 
-1. **Alignment**: each day's arrivals are aligned ordinally against the longest day (a missed bus shifts every later arrival — raw columns would smear slots across the day). A day whose pattern is consistently shifted (median deviation ≥ 8 min, agreed by ≥ 60% of slots) or too incomplete (< 60% of the median day length) is flagged **anomalous** and excluded from scoring.
-2. **Slots**: aligned columns are merged within ±6 min; each slot's **median** is its prediction. A slot needs **≥ 3 samples** (days) to be claimable.
+1. **Alignment**: each day's arrivals are matched **time-anchored** — every arrival pairs with the nearest reference point (the densest day's arrivals) within ±15 min, one-to-one. Ordinal alignment was the original design but it drifts when day counts vary (capture noise, missed trips): a ±1–2 position shift by the evening makes columns mix adjacent trips, medians land between real arrivals, and slot quality collapses (route 9507's evenings showed n=8, q=0.00 over perfectly regular 20:56/21:17/21:41 arrivals). Time-anchoring survives the drift. A day whose pattern is consistently shifted (median deviation ≥ 8 min, agreed by ≥ 60% of slots) or too incomplete (< 60% of the median day's count **or span** — a late-starting day compresses its ordinals) is flagged **anomalous** and excluded from scoring.
+2. **Slots**: matched columns are merged within ±6 min; each slot's **median** is its prediction. A slot needs **≥ 3 samples** (days) to be claimable.
 3. **Confidence**: the fraction of (day × slot) samples landing within **±3 min** of their slot median, days with no near-arrival skipped — so occasional missed buses don't punish the route. This is a **tightness** metric, not an accuracy one (see §6).
 
 ### 5.3 Queries and gates
@@ -110,6 +110,8 @@ The trajectory matters as much as the snapshot: with only 4 ring days, the stati
 Per-route confidence (28 weekday days in the ring's history): 32 → 0.70, 73 → 0.67, 310 → 0.75, 340 → 0.90, 4103 → 0.84, 9409 → 0.72, 9507 → 0.84.
 
 **Slot-level gating (per-slot quality ≥ 0.60)** is the largest single accuracy lever: on the same 4,729 held-out arrivals, claims that pass the slot gate land at **median 2 min, 68% ≤3 min, 81% ≤5 min** (n=2,657) versus 4 min / 44% / 59% for all slots. Withholding the loose slots buys a 2× median-error improvement on what remains.
+
+**Time-anchored alignment (Sep 29)** recovered a quarter of the model's claims: the original ordinal alignment drifted when day counts varied (capture noise), smearing evening columns so medians landed between real trips — 80 slots across all routes carried n≥5 evidence with q=0.00 over perfectly regular arrivals (9507's evenings). After the fix, gated claims land at **median 2 min, 74% ≤3 min, 87% ≤5 min** (n=6,713) — more claims *and* better accuracy.
 
 **Partial-day gate**: a day with fewer than 60% of the ring's median arrival count (board unplugged, capture gap) is excluded at learn time — its few arrivals cannot be ordinally aligned and skewed every slot's median. Without the gate, half-days (9/14–15, 9/21, 9/23) pushed held-out ≤5 min accuracy from ~80% to ~45% for a week at a time; with it, every held-out day sits at 76–86%.
 
