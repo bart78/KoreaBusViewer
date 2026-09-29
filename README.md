@@ -6,7 +6,7 @@ An ESP32-S3 signboard for a single Korean bus stop that shows **live arrival cou
 
 - One board, one stop (STOP 07593, Seongnam/Gyeonggi), seven routes (32, 73, 310, 340, 4103, 9409, 9507). Live data from two government APIs (GBIS + TAGO), merged; a static schedule and an **on-device learner** as fallbacks.
 - The board logs every arrival it witnesses to flash (60 days). At boot, a portable, dependency-free C learner rebuilds per-route **arrival rings** from that log and, when the feed is silent, shows learned predictions — **only when confident, otherwise an honest `--`**.
-- Held-out validation (leave-one-out across 21 full weekdays, 4,729 logged arrivals): the learned ring beats the static headway model on every metric — **median 4 vs 5 min, 59% vs 53% within ±5 min**. With **per-slot quality gating**, the claims the board actually shows land at **median 2 min, 81% within ±5 min** — the loose slots withhold themselves instead of eroding trust.
+- Held-out validation (leave-one-out across 21 full weekdays, 6,713 logged arrivals): the learned ring beats the static headway model on every metric — **median 4 vs 5 min, 59% vs 53% within ±5 min**. With **per-slot quality gating** (and time-anchored alignment), the claims the board actually shows land at **median 2 min, 74% within ±3 min, 87% within ±5 min** — the loose slots withhold themselves instead of eroding trust.
 - Everything — logging, learning, display, honesty rules — runs on the board. No server, no account, no phone required.
 
 ## 2. Background & Motivation
@@ -54,7 +54,12 @@ The board's problem, stated plainly: *when the feed says nothing, what should th
 Every arrival is appended to NVS as a **2-byte event**: `holiday(1)<<15 | type(1)<<14 | route(3)<<11 | minute_of_day(11)` — one blob per day. Detection:
 
 - **Predicted** (type 0): first sighting of a bus within 240 s, deduped per vehicle ID.
-- **Confirmed** (type 1): the tracked bus passed — detected by the GBIS **vehicle-id roll**, or **2 consecutive silent polls** (one-poll blips don't count), or a dead-feed release (logged only if the route is still silent when the feed returns — cancelled otherwise, so a reappearing bus never double-counts).
+- **Confirmed** (type 1): the tracked bus passed — detected by any of:
+  - the **vehicle-id roll** (a tracked bus's ID changed — decisive, confirms at once) or an ID lost during a feed gap;
+  - the **time-based silence** rule (the route absent ≥ 90 s — the old "2 consecutive silent polls" was a time threshold in disguise, and the slower polling cadence silently stretched it to 4–6 min, starving id-less routes whose feeds only drop for a poll or two);
+  - the **id-less ETA-jump** (a close bus whose slot jumps >8 min outward, persisting one poll — the only pass signal for continuously-reported feeds without IDs);
+  - a dead-feed release (logged only if the route is still silent when the feed returns — cancelled otherwise, so a reappearing bus never double-counts).
+- The roll and jump paths track buses up to **8 min out** (`LOG_ROLL_SECS`) — feeds with coarse ETA updates (5-min quantization) never enter a 4-min close window before a pass, so whole trips were displayed but unconfirmable.
 - All paths are mutually exclusive and deduped by vehicle ID within 10 minutes.
 
 ### 4.4 The honesty layer
@@ -124,26 +129,41 @@ Per-route confidence (28 weekday days in the ring's history): 32 → 0.70, 73 �
 
 ### 6.3 Capture audit
 
-The ring inherits feed coverage. Route 310 logged only **10 confirmed arrivals in a full day against 129 predicted sightings** — its confirm path (vehicle-id roll / 2 silent polls) rarely satisfies, while the other routes log 26–64. This is the mechanism behind every hole in the ring, and the reason the confidence metric (tightness, not coverage) can stay high on a holey route — see §7.
+The ring inherits feed coverage — and the confirm paths had to be rebuilt around that reality. Route 310 once logged only **10 confirmed arrivals in a full day against 129 predicted sightings** (the id-less feed never satisfied the roll or silence conditions); after the time-based silence and id-less ETA-jump confirms, it captures **24–41/day** — its ring filled and its learned values now render. The capture-health table (`analyze_buslog.py`) prints the predicted:confirmed ratio per route per day — the alarm that catches a capture regression within a day.
+
+Two feed-side holes remain, honest rather than fixed: route 32's evenings (the feed reports them on only half of days — the ring honestly says `--`) and route 310's evenings (high-variance — the ring refuses to claim what it cannot predict).
 
 ## 7. Future Work
 
-- **Coverage-aware route confidence** — the slot gate handles loose slots, but the route-level confidence still can't see coverage: route 310 scores 0.76 while its capture stays sparse (its days genuinely lack most arrivals, so slots have few samples to be tight about). Weight route confidence by the share of the service window with claimable slots.
-- **Fix 310's confirm path** — its predicted sightings fire often but the confirm conditions rarely do: the "2 silent polls" rule was a time threshold in disguise, and the slower polling cadence (45/120/180 s) silently stretched it to 4–6 min. **Done (Aug 31)**: the silence rule is now time-based (90 s of absence, poll-count-independent) and an id-less ETA-jump confirm (a close bus whose slot jumps >8 min outward, persisting one poll) covers continuously-reported feeds. **Extended (Sep 5)**: manual-tap cross-checking exposed the deeper systematic gap — feeds with coarse ETA updates (5-min quantization) never enter the 240 s close window before a pass, so whole trips were displayed but unconfirmable (route 4103's 07:30 trip: 80% of taps missed). The roll and jump paths now track buses up to 8 min out (the ID roll is decisive; the jump keeps its persistence).
+- **Coverage-aware route confidence** — the slot gate handles loose slots, but the route-level confidence still can't see coverage. Weight route confidence by the share of the service window with claimable slots.
+- **The remaining feed-side holes** — route 32's evenings (feed-dependent capture) and 310's high-variance evenings: more data, not looser gates, is the only honest fix.
 - **Permanent held-out harness** — validate every night's ring against the next day automatically, in the tools, so each firmware change ships with a regression number.
-- **Manual-tap validation** — a companion tap app quantifies the miss rate per route (how many physical buses the feed never reports), turning feed blind spots into a measured number.
+- **Manual-tap validation** — a companion tap app quantifies the miss rate per route (how many physical buses the feed never reports), turning feed blind spots into a measured number. Already demonstrated: 4 taps caught route 4103's systematic 07:30 capture hole.
 - **Per-route gate tuning** — ride-time-aware windows (a route whose origin is 12 min away has a different honest window than a 40-min route).
 - **The commute planner** — the ring generalizes to multiple stops/legs; a planner would optimize best-leave-time over walk + bus + subway distributions. (Separate project.)
 
-## 8. Getting Started
+## 8. Lessons Learned
+
+The failures that shaped this system, each with its mechanism — the observable symptom, the root cause, and the fix:
+
+1. **"2 consecutive silent polls" was a time threshold in disguise.** When the polling cadence slowed (15/60 s → 45/120/180 s), the silence requirement silently stretched from ~30–120 s to 4–6 min — and id-less routes whose feeds drop for only a poll or two stopped confirming entirely (310: 16–29 → 8–15 confirms/day, no code change). *Lesson: never express a time requirement as a poll count; the poll interval is a moving target.*
+2. **A confirm path can be dead-on-arrival without ever failing a test.** The id-less ETA-jump required its persistence poll to re-enter the close-window gate — but the persistence poll is far *by definition*, so `jump_pending` was wiped before it could ever confirm. The path contributed zero for two weeks while a separate mechanism (the ID roll) masked it. *Lesson: a guard condition that excludes the very state the feature needs is invisible until you trace the actual event flow.*
+3. **The display can show a bus the logger can never certify.** Feeds with coarse ETA updates (5-min quantization) never enter the 4-min close window before a pass — the board showed the countdown, Kakao showed it, and the confirm logic was structurally blind. Manual taps caught it: 80% of 4103's 07:30 taps went unmatched. *Lesson: the display and the logger have different evidence thresholds — "we saw it" is not "we confirmed it", and only the taps can audit the gap.*
+4. **Ordinal alignment smears evenings.** Aligning days by arrival *position* drifts when day counts vary (capture noise) — by evening, columns mix adjacent trips and slot medians land between real arrivals, collapsing quality to 0.00 over perfectly regular service (9507's evenings: n=8, q=0.00 over a clean 21-min cadence). Time-anchored matching (nearest reference within ±15 min, one-to-one) fixed it, recovering a quarter of all claims *and* improving accuracy. *Lesson: ordinal alignment assumes the number of arrivals is stable; capture noise breaks that assumption at the day's end.*
+5. **A partial day poisons the whole ring.** A day with 62% of the arrivals but a missing morning compresses its ordinals and shifts every evening column — held-out accuracy dropped from ~80% to ~45% for a week after two half-days entered the ring. The fix: exclude days below 60% of the ring's median *count or span* at learn time. *Lesson: a day that started late is not a shorter day — it is a misaligned day.*
+6. **A min–max window is a 74% claim, not a 100% claim.** The "arrives between earliest and latest observed" envelope held only 74% of held-out days (each new day extends the observed range a quarter of the time). A ±5 min calibrated margin restored it to 93% for the claims the display actually makes. *Lesson: the observed range underestimates the true range; state the confidence or widen the window.*
+7. **The claim rules must travel with the data.** The offline export's q-only gate let a consumer claim an n=1 slot the board would refuse — the model looked broken at the e-ink while the board was right. The export now carries a `claimable` flag (n ≥ 3 *and* q ≥ 0.60). *Lesson: an API is a contract; encode the acceptance rules in the data itself.*
+8. **Diagnostics must be in place before the mystery.** Silent days were diagnosed only by inference (event spans, start times, the epoch-dated health marker that revealed boots before the SNTP sync). The daily health markers (boots / fetch-fails / last-ok) now make the next gap self-diagnosing. *Lesson: a power cycle during an NVS write can lose a morning of log — the ring's span gate absorbs it, but the diagnostic tells you it happened.*
+
+## 9. Getting Started
 
 1. Register the five data.go.kr services (§4.1, same key) — all auto-approve within minutes except 기상청.
 2. `cp espidf/src/secret_config.h.example espidf/src/secret_config.h` (WiFi + key); point `NODE_ID`/`GBIS_STATION_ID`/`STOP_LABEL`, `ENV_STATION`, `WX_GRID_X/Y`, and the `ROWS[]` table at your stop. Find the station ID via `https://m.gbis.go.kr/api/stationSearch?keyword=<stop name>`.
 3. `cd espidf && pio run -t upload` (app-only flash preserves the NVS log).
 4. Watch logs with `pio device monitor`.
 
-Tools (offline analysis): `parse_nvs.py` (decode NVS dumps), `analyze_buslog.py` (arrival statistics), `learn_schedule.py` (the Python prototype the C is golden-tested against), `host_test.c` + `test_learner.py` (the golden test), `capture_log.py` (headless logger).
+Tools (offline analysis): `parse_nvs.py` (decode NVS dumps), `analyze_buslog.py` (arrival statistics + capture-health table), `learn_schedule.py` (the Python prototype the C is golden-tested against), `host_test.c` + `test_learner.py` (the golden test), `capture_log.py` (headless logger), `cross_check.py` (tap-data vs board-log validation), `export_model.py` (emit `model.json` — the learned model + static fallback + observed holidays, for offline consumers like an e-paper dashboard; `holidays.json` covers the published holiday calendar 2026–2028).
 
-## 9. Credits & License
+## 10. Credits & License
 
 BSD 3-Clause — attribution required. Board: JC3248W535EN module; display drivers per the vendor demo. Data: 경기도 버스정보시스템, 국토교통부 (TAGO), 한국환경공단, 기상청, 한국천문연구원 — via data.go.kr.
