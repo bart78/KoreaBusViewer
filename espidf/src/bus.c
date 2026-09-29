@@ -56,6 +56,7 @@ static const char* TAG = "BUS";
 #define CAD_OFF_SECS    300   // re-check the window while not polling
 #define CLOSE_WIN_SECS  30
 #define CLOSE_REFRESH   30
+#define CONFIRM_REFRESH 90   // while a confirm decision is in flight
 #define RETRY_REFRESH   20
 
 // optional header env line (air quality + weather). data.go.kr services
@@ -1185,6 +1186,16 @@ static int any_close_bus(void) {
     return 0;
 }
 
+// a confirm decision is in flight (a vanished close bus awaiting the
+// silence timer or the jump persistence poll): poll faster so the decision
+// lands promptly. Bounded: the states resolve in 1-2 polls, so this adds
+// roughly one poll per pass (~+40 calls/day) — inside the quota budget.
+static int confirm_in_flight(void) {
+    for (int i = 0; i < N_ROWS; i++)
+        if (rows[i].confirm_pending || rows[i].jump_pending) return 1;
+    return 0;
+}
+
 // weekday rush window (also drives the commute-headway selection)
 static int is_peak_now(void) {
     time_t now = kst_now();
@@ -1233,6 +1244,8 @@ static int cadence_now(void) {
         return -1;
     if (any_close_bus())
         return CLOSE_REFRESH;
+    if (confirm_in_flight())
+        return CONFIRM_REFRESH;
     if (!weekend_p() && h >= CAD_RUSH_START && h < CAD_RUSH_END)
         return CAD_RUSH_SECS;
     if (h >= CAD_EVE_START)
