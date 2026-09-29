@@ -1,7 +1,7 @@
 {
  "stop": "GGB206000648",
- "exported": "2026-09-29T20:28+09:00",
- "model_through": "2026-09-29",
+ "exported": "2026-09-29T20:43+09:00",
+ "model_through": "2026-09-28",
  "holidays_observed": [
   "2026-08-17",
   "2026-09-24",
@@ -18,511 +18,584 @@
       "early": 367,
       "late": 374,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 381,
       "early": 380,
       "late": 386,
       "n": 10,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 389,
       "early": 383,
       "late": 395,
       "n": 10,
-      "q": 0.7
+      "q": 0.7,
+      "claimable": true
      },
      {
       "med": 405,
       "early": 401,
       "late": 410,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 414,
       "early": 409,
       "late": 419,
       "n": 10,
-      "q": 0.375
+      "q": 0.375,
+      "claimable": false
      },
      {
       "med": 426,
       "early": 421,
       "late": 429,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 434,
       "early": 429,
       "late": 436,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 442,
       "early": 437,
       "late": 448,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 452,
       "early": 449,
       "late": 456,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 462,
       "early": 456,
       "late": 467,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 475,
       "early": 472,
       "late": 481,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 483,
       "early": 481,
       "late": 489,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 494,
       "early": 492,
       "late": 497,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 507,
       "early": 502,
       "late": 512,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 516,
       "early": 512,
       "late": 521,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 527,
       "early": 523,
       "late": 531,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 534,
       "early": 533,
       "late": 539,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 542,
       "early": 537,
       "late": 546,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 556,
       "early": 552,
       "late": 561,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 587,
       "early": 581,
       "late": 581,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 616,
       "early": 613,
       "late": 620,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 630,
       "early": 628,
       "late": 633,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 642,
       "early": 641,
       "late": 648,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 654,
       "early": 651,
       "late": 658,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 670,
       "early": 665,
       "late": 671,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 682,
       "early": 676,
       "late": 686,
       "n": 10,
-      "q": 0.556
+      "q": 0.556,
+      "claimable": false
      },
      {
       "med": 701,
       "early": 700,
       "late": 704,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 710,
       "early": 704,
       "late": 714,
       "n": 10,
-      "q": 0.375
+      "q": 0.375,
+      "claimable": false
      },
      {
       "med": 727,
       "early": 724,
       "late": 731,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 738,
       "early": 733,
       "late": 742,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 749,
       "early": 745,
       "late": 753,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 757,
       "early": 753,
       "late": 762,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 764,
       "early": 759,
       "late": 764,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 774,
       "early": 769,
       "late": 779,
       "n": 10,
-      "q": 0.3
+      "q": 0.3,
+      "claimable": false
      },
      {
       "med": 783,
       "early": 778,
       "late": 786,
       "n": 10,
-      "q": 0.4
+      "q": 0.4,
+      "claimable": false
      },
      {
       "med": 794,
       "early": 789,
       "late": 800,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 804,
       "early": 800,
       "late": 808,
       "n": 10,
-      "q": 0.7
+      "q": 0.7,
+      "claimable": true
      },
      {
       "med": 814,
       "early": 813,
       "late": 818,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 822,
       "early": 817,
       "late": 825,
       "n": 10,
-      "q": 0.7
+      "q": 0.7,
+      "claimable": true
      },
      {
       "med": 830,
       "early": 824,
       "late": 834,
       "n": 10,
-      "q": 0.7
+      "q": 0.7,
+      "claimable": true
      },
      {
       "med": 838,
       "early": 833,
       "late": 842,
       "n": 10,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 852,
       "early": 851,
       "late": 857,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 864,
       "early": 862,
       "late": 869,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 874,
       "early": 869,
       "late": 877,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 881,
       "early": 875,
       "late": 883,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 892,
       "early": 888,
       "late": 893,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 902,
       "early": 899,
       "late": 907,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 923,
       "early": 922,
       "late": 929,
       "n": 10,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": true
      },
      {
       "med": 937,
       "early": 932,
       "late": 936,
       "n": 10,
-      "q": 0.2
+      "q": 0.2,
+      "claimable": false
      },
      {
       "med": 946,
       "early": 944,
       "late": 948,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 958,
       "early": 956,
       "late": 962,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 972,
       "early": 968,
       "late": 977,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 990,
       "early": 986,
       "late": 993,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 1004,
       "early": 1001,
       "late": 1004,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1028,
       "early": 1022,
       "late": 1034,
       "n": 10,
-      "q": 0.2
+      "q": 0.2,
+      "claimable": false
      },
      {
       "med": 1043,
       "early": 1037,
       "late": 1049,
       "n": 10,
-      "q": 0.571
+      "q": 0.571,
+      "claimable": false
      },
      {
       "med": 1058,
       "early": 1058,
       "late": 1064,
       "n": 10,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 1073,
       "early": 1070,
       "late": 1079,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 1088,
       "early": 1082,
       "late": 1094,
       "n": 10,
-      "q": 0.444
+      "q": 0.444,
+      "claimable": false
      },
      {
       "med": 1103,
       "early": 1100,
       "late": 1109,
       "n": 10,
-      "q": 0.7
+      "q": 0.7,
+      "claimable": true
      },
      {
       "med": 1115,
       "early": 1109,
       "late": 1115,
       "n": 10,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 1143,
       "early": 1137,
       "late": 1149,
       "n": 19,
-      "q": 0.3
+      "q": 0.3,
+      "claimable": false
      },
      {
       "med": 1157,
       "early": 1152,
       "late": 1160,
       "n": 9,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1171,
       "early": 1165,
       "late": 1173,
       "n": 17,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1181,
       "early": 1177,
       "late": 1187,
       "n": 8,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 1197,
       "early": 1193,
       "late": 1197,
       "n": 7,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": true
      },
      {
       "med": 1209,
       "early": 1206,
       "late": 1208,
       "n": 6,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1241,
       "early": 1241,
       "late": 1245,
       "n": 5,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1258,
       "early": 1253,
       "late": 1253,
       "n": 2,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 1271,
       "early": 1271,
       "late": 1272,
       "n": 3,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1311,
       "early": 1316,
       "late": 1316,
       "n": 5,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 1334,
       "early": 1331,
       "late": 1334,
       "n": 1,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": false
      },
      {
       "med": 1380,
       "early": 1375,
       "late": 1382,
       "n": 1,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": false
      }
     ]
    },
@@ -534,399 +607,456 @@
       "early": 396,
       "late": 397,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 423,
       "early": 418,
       "late": 426,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 434,
       "early": 432,
       "late": 438,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 450,
       "early": 444,
       "late": 454,
       "n": 10,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 466,
       "early": 461,
       "late": 469,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 489,
       "early": 485,
       "late": 493,
       "n": 10,
-      "q": 0.4
+      "q": 0.4,
+      "claimable": false
      },
      {
       "med": 504,
       "early": 498,
       "late": 509,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 518,
       "early": 516,
       "late": 524,
       "n": 10,
-      "q": 0.556
+      "q": 0.556,
+      "claimable": false
      },
      {
       "med": 534,
       "early": 530,
       "late": 538,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 548,
       "early": 544,
       "late": 553,
       "n": 10,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 563,
       "early": 561,
       "late": 569,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 578,
       "early": 575,
       "late": 583,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 589,
       "early": 583,
       "late": 589,
       "n": 10,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 602,
       "early": 598,
       "late": 605,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 626,
       "early": 624,
       "late": 632,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 646,
       "early": 640,
       "late": 651,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 662,
       "early": 656,
       "late": 664,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 671,
       "early": 671,
       "late": 677,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 695,
       "early": 693,
       "late": 701,
       "n": 10,
-      "q": 0.167
+      "q": 0.167,
+      "claimable": false
      },
      {
       "med": 706,
       "early": 700,
       "late": 705,
       "n": 10,
-      "q": 0.375
+      "q": 0.375,
+      "claimable": false
      },
      {
       "med": 720,
       "early": 714,
       "late": 725,
       "n": 10,
-      "q": 0.143
+      "q": 0.143,
+      "claimable": false
      },
      {
       "med": 730,
       "early": 725,
       "late": 730,
       "n": 10,
-      "q": 0.571
+      "q": 0.571,
+      "claimable": false
      },
      {
       "med": 752,
       "early": 746,
       "late": 756,
       "n": 10,
-      "q": 0.571
+      "q": 0.571,
+      "claimable": false
      },
      {
       "med": 770,
       "early": 764,
       "late": 775,
       "n": 10,
-      "q": 0.286
+      "q": 0.286,
+      "claimable": false
      },
      {
       "med": 788,
       "early": 783,
       "late": 794,
       "n": 10,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 800,
       "early": 794,
       "late": 805,
       "n": 10,
-      "q": 0.143
+      "q": 0.143,
+      "claimable": false
      },
      {
       "med": 816,
       "early": 813,
       "late": 821,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 830,
       "early": 831,
       "late": 835,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 844,
       "early": 839,
       "late": 850,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 857,
       "early": 853,
       "late": 858,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 872,
       "early": 866,
       "late": 874,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 884,
       "early": 882,
       "late": 890,
       "n": 10,
-      "q": 0.625
+      "q": 0.625,
+      "claimable": true
      },
      {
       "med": 904,
       "early": 899,
       "late": 905,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 915,
       "early": 913,
       "late": 919,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 941,
       "early": 935,
       "late": 946,
       "n": 10,
-      "q": 0.4
+      "q": 0.4,
+      "claimable": false
      },
      {
       "med": 966,
       "early": 967,
       "late": 972,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 979,
       "early": 973,
       "late": 984,
       "n": 10,
-      "q": 0.571
+      "q": 0.571,
+      "claimable": false
      },
      {
       "med": 988,
       "early": 983,
       "late": 992,
       "n": 9,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1000,
       "early": 997,
       "late": 1002,
       "n": 9,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1015,
       "early": 1010,
       "late": 1016,
       "n": 9,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": true
      },
      {
       "med": 1033,
       "early": 1029,
       "late": 1034,
       "n": 9,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 1072,
       "early": 1069,
       "late": 1077,
       "n": 9,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 1082,
       "early": 1077,
       "late": 1087,
       "n": 9,
-      "q": 0.429
+      "q": 0.429,
+      "claimable": false
      },
      {
       "med": 1096,
       "early": 1095,
       "late": 1100,
       "n": 9,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 1114,
       "early": 1109,
       "late": 1114,
       "n": 17,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 1128,
       "early": 1122,
       "late": 1132,
       "n": 8,
-      "q": 0.286
+      "q": 0.286,
+      "claimable": false
      },
      {
       "med": 1141,
       "early": 1137,
       "late": 1145,
       "n": 8,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1156,
       "early": 1151,
       "late": 1162,
       "n": 8,
-      "q": 0.143
+      "q": 0.143,
+      "claimable": false
      },
      {
       "med": 1168,
       "early": 1162,
       "late": 1173,
       "n": 8,
-      "q": 0.286
+      "q": 0.286,
+      "claimable": false
      },
      {
       "med": 1178,
       "early": 1173,
       "late": 1178,
       "n": 7,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 1191,
       "early": 1186,
       "late": 1191,
       "n": 7,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 1219,
       "early": 1213,
       "late": 1213,
       "n": 6,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 1275,
       "early": 1274,
       "late": 1275,
       "n": 6,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1299,
       "early": 1294,
       "late": 1301,
       "n": 6,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1323,
       "early": 1320,
       "late": 1329,
       "n": 7,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1345,
       "early": 1340,
       "late": 1345,
       "n": 1,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": false
      },
      {
       "med": 1368,
       "early": 1362,
       "late": 1367,
       "n": 6,
-      "q": 0.4
+      "q": 0.4,
+      "claimable": false
      }
     ]
    }
@@ -940,455 +1070,520 @@
       "early": 365,
       "late": 368,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 384,
       "early": 380,
       "late": 384,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 401,
       "early": 395,
       "late": 401,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 420,
       "early": 414,
       "late": 425,
       "n": 10,
-      "q": 0.571
+      "q": 0.571,
+      "claimable": false
      },
      {
       "med": 433,
       "early": 428,
       "late": 435,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 451,
       "early": 449,
       "late": 453,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 460,
       "early": 458,
       "late": 464,
       "n": 10,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": true
      },
      {
       "med": 477,
       "early": 472,
       "late": 479,
       "n": 10,
-      "q": 0.625
+      "q": 0.625,
+      "claimable": true
      },
      {
       "med": 488,
       "early": 483,
       "late": 494,
       "n": 10,
-      "q": 0.429
+      "q": 0.429,
+      "claimable": false
      },
      {
       "med": 507,
       "early": 504,
       "late": 512,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 516,
       "early": 510,
       "late": 516,
       "n": 10,
-      "q": 0.429
+      "q": 0.429,
+      "claimable": false
      },
      {
       "med": 531,
       "early": 530,
       "late": 536,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 545,
       "early": 539,
       "late": 551,
       "n": 10,
-      "q": 0.556
+      "q": 0.556,
+      "claimable": false
      },
      {
       "med": 562,
       "early": 558,
       "late": 567,
       "n": 10,
-      "q": 0.286
+      "q": 0.286,
+      "claimable": false
      },
      {
       "med": 572,
       "early": 567,
       "late": 574,
       "n": 10,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 594,
       "early": 590,
       "late": 599,
       "n": 10,
-      "q": 0.4
+      "q": 0.4,
+      "claimable": false
      },
      {
       "med": 604,
       "early": 598,
       "late": 608,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 616,
       "early": 614,
       "late": 621,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 626,
       "early": 620,
       "late": 632,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 635,
       "early": 631,
       "late": 638,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 654,
       "early": 650,
       "late": 657,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 664,
       "early": 659,
       "late": 665,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 680,
       "early": 674,
       "late": 686,
       "n": 10,
-      "q": 0.25
+      "q": 0.25,
+      "claimable": false
      },
      {
       "med": 692,
       "early": 686,
       "late": 695,
       "n": 10,
-      "q": 0.25
+      "q": 0.25,
+      "claimable": false
      },
      {
       "med": 704,
       "early": 698,
       "late": 707,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 719,
       "early": 713,
       "late": 722,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 731,
       "early": 728,
       "late": 734,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 740,
       "early": 734,
       "late": 744,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 751,
       "early": 746,
       "late": 755,
       "n": 10,
-      "q": 0.375
+      "q": 0.375,
+      "claimable": false
      },
      {
       "med": 762,
       "early": 758,
       "late": 768,
       "n": 10,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 784,
       "early": 781,
       "late": 788,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 812,
       "early": 808,
       "late": 818,
       "n": 10,
-      "q": 0.556
+      "q": 0.556,
+      "claimable": false
      },
      {
       "med": 820,
       "early": 815,
       "late": 824,
       "n": 10,
-      "q": 0.25
+      "q": 0.25,
+      "claimable": false
      },
      {
       "med": 840,
       "early": 835,
       "late": 846,
       "n": 10,
-      "q": 0.444
+      "q": 0.444,
+      "claimable": false
      },
      {
       "med": 853,
       "early": 848,
       "late": 851,
       "n": 10,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 876,
       "early": 882,
       "late": 882,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 894,
       "early": 894,
       "late": 894,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 922,
       "early": 923,
       "late": 928,
       "n": 10,
-      "q": 0.222
+      "q": 0.222,
+      "claimable": false
      },
      {
       "med": 936,
       "early": 932,
       "late": 938,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 948,
       "early": 944,
       "late": 951,
       "n": 19,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 974,
       "early": 968,
       "late": 978,
       "n": 9,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 986,
       "early": 982,
       "late": 992,
       "n": 9,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1004,
       "early": 1000,
       "late": 1010,
       "n": 9,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 1013,
       "early": 1010,
       "late": 1019,
       "n": 9,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1020,
       "early": 1018,
       "late": 1025,
       "n": 9,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1034,
       "early": 1030,
       "late": 1036,
       "n": 9,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": true
      },
      {
       "med": 1043,
       "early": 1038,
       "late": 1044,
       "n": 9,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 1063,
       "early": 1058,
       "late": 1066,
       "n": 18,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1087,
       "early": 1085,
       "late": 1092,
       "n": 18,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1102,
       "early": 1099,
       "late": 1106,
       "n": 9,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1109,
       "early": 1103,
       "late": 1114,
       "n": 9,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1133,
       "early": 1127,
       "late": 1133,
       "n": 9,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 1151,
       "early": 1147,
       "late": 1155,
       "n": 9,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 1163,
       "early": 1158,
       "late": 1163,
       "n": 9,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1183,
       "early": 1178,
       "late": 1183,
       "n": 9,
-      "q": 0.143
+      "q": 0.143,
+      "claimable": false
      },
      {
       "med": 1206,
       "early": 1206,
       "late": 1211,
       "n": 9,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 1222,
       "early": 1217,
       "late": 1226,
       "n": 8,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1238,
       "early": 1232,
       "late": 1238,
       "n": 8,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1265,
       "early": 1259,
       "late": 1271,
       "n": 8,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 1274,
       "early": 1268,
       "late": 1275,
       "n": 7,
-      "q": 0.571
+      "q": 0.571,
+      "claimable": false
      },
      {
       "med": 1303,
       "early": 1301,
       "late": 1307,
       "n": 7,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 1316,
       "early": 1310,
       "late": 1317,
       "n": 7,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 1346,
       "early": 1347,
       "late": 1352,
       "n": 13,
-      "q": 0.4
+      "q": 0.4,
+      "claimable": false
      },
      {
       "med": 1354,
       "early": 1349,
       "late": 1360,
       "n": 2,
-      "q": 0.286
+      "q": 0.286,
+      "claimable": false
      },
      {
       "med": 1374,
       "early": 1369,
       "late": 1380,
       "n": 2,
-      "q": 0.111
+      "q": 0.111,
+      "claimable": false
      }
     ]
    },
@@ -1400,231 +1595,264 @@
       "early": 367,
       "late": 370,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 416,
       "early": 415,
       "late": 420,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 445,
       "early": 444,
       "late": 450,
       "n": 10,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": true
      },
      {
       "med": 474,
       "early": 469,
       "late": 479,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 502,
       "early": 498,
       "late": 505,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 530,
       "early": 526,
       "late": 533,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 556,
       "early": 551,
       "late": 560,
       "n": 10,
-      "q": 0.625
+      "q": 0.625,
+      "claimable": true
      },
      {
       "med": 584,
       "early": 578,
       "late": 587,
       "n": 10,
-      "q": 0.625
+      "q": 0.625,
+      "claimable": true
      },
      {
       "med": 620,
       "early": 620,
       "late": 620,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 648,
       "early": 648,
       "late": 648,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 676,
       "early": 676,
       "late": 676,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 700,
       "early": 700,
       "late": 700,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 725,
       "early": 719,
       "late": 720,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 758,
       "early": 758,
       "late": 758,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 788,
       "early": 788,
       "late": 788,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 832,
       "early": 826,
       "late": 826,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 870,
       "early": 870,
       "late": 870,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 910,
       "early": 910,
       "late": 910,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 952,
       "early": 949,
       "late": 955,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 978,
       "early": 974,
       "late": 982,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 1005,
       "early": 1000,
       "late": 1011,
       "n": 10,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 1034,
       "early": 1028,
       "late": 1039,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1060,
       "early": 1056,
       "late": 1066,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1087,
       "early": 1082,
       "late": 1090,
       "n": 9,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 1112,
       "early": 1111,
       "late": 1115,
       "n": 9,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1138,
       "early": 1136,
       "late": 1141,
       "n": 9,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1165,
       "early": 1160,
       "late": 1168,
       "n": 8,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1194,
       "early": 1189,
       "late": 1195,
       "n": 8,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1243,
       "early": 1240,
       "late": 1248,
       "n": 8,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1272,
       "early": 1269,
       "late": 1273,
       "n": 8,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1294,
       "early": 1292,
       "late": 1296,
       "n": 8,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1323,
       "early": 1319,
       "late": 1325,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1347,
       "early": 1346,
       "late": 1352,
       "n": 2,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": false
      }
     ]
    }
@@ -1638,231 +1866,264 @@
       "early": 317,
       "late": 324,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 367,
       "early": 365,
       "late": 369,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 424,
       "early": 426,
       "late": 426,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 463,
       "early": 462,
       "late": 464,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 490,
       "early": 485,
       "late": 496,
       "n": 10,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 499,
       "early": 493,
       "late": 499,
       "n": 10,
-      "q": 0.4
+      "q": 0.4,
+      "claimable": false
      },
      {
       "med": 536,
       "early": 535,
       "late": 539,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 553,
       "early": 548,
       "late": 555,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 574,
       "early": 568,
       "late": 568,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 594,
       "early": 589,
       "late": 597,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 644,
       "early": 643,
       "late": 647,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 696,
       "early": 698,
       "late": 698,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 765,
       "early": 769,
       "late": 769,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 815,
       "early": 818,
       "late": 821,
       "n": 19,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 946,
       "early": 943,
       "late": 946,
       "n": 9,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 960,
       "early": 957,
       "late": 958,
       "n": 9,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 970,
       "early": 969,
       "late": 974,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 985,
       "early": 983,
       "late": 990,
       "n": 12,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 1003,
       "early": 1001,
       "late": 1005,
       "n": 20,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1014,
       "early": 1016,
       "late": 1016,
       "n": 4,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1027,
       "early": 1027,
       "late": 1028,
       "n": 18,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1047,
       "early": 1045,
       "late": 1048,
       "n": 6,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1059,
       "early": 1056,
       "late": 1061,
       "n": 7,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1066,
       "early": 1061,
       "late": 1066,
       "n": 3,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1079,
       "early": 1078,
       "late": 1079,
       "n": 1,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": false
      },
      {
       "med": 1092,
       "early": 1092,
       "late": 1096,
       "n": 3,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1112,
       "early": 1108,
       "late": 1109,
       "n": 2,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1127,
       "early": 1126,
       "late": 1131,
       "n": 1,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": false
      },
      {
       "med": 1151,
       "early": 1145,
       "late": 1156,
       "n": 1,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 1163,
       "early": 1162,
       "late": 1168,
       "n": 3,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 1185,
       "early": 1185,
       "late": 1189,
       "n": 1,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": false
      },
      {
       "med": 1268,
       "early": 1268,
       "late": 1274,
       "n": 1,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": false
      },
      {
       "med": 1370,
       "early": 1368,
       "late": 1375,
       "n": 1,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": false
      }
     ]
    },
@@ -1874,259 +2135,296 @@
       "early": 316,
       "late": 322,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 360,
       "early": 359,
       "late": 360,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 412,
       "early": 418,
       "late": 418,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 450,
       "early": 448,
       "late": 453,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 484,
       "early": 482,
       "late": 488,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 538,
       "early": 544,
       "late": 544,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 576,
       "early": 573,
       "late": 573,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 610,
       "early": 605,
       "late": 611,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 630,
       "early": 625,
       "late": 632,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 717,
       "early": 711,
       "late": 714,
       "n": 10,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 766,
       "early": 766,
       "late": 771,
       "n": 10,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 792,
       "early": 791,
       "late": 793,
       "n": 9,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 802,
       "early": 807,
       "late": 807,
       "n": 8,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 812,
       "early": 807,
       "late": 812,
       "n": 9,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 831,
       "early": 827,
       "late": 836,
       "n": 8,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 838,
       "early": 834,
       "late": 836,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 860,
       "early": 854,
       "late": 865,
       "n": 14,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 882,
       "early": 885,
       "late": 888,
       "n": 16,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 906,
       "early": 905,
       "late": 909,
       "n": 6,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 930,
       "early": 925,
       "late": 936,
       "n": 6,
-      "q": 0.571
+      "q": 0.571,
+      "claimable": false
      },
      {
       "med": 952,
       "early": 949,
       "late": 955,
       "n": 6,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 969,
       "early": 968,
       "late": 971,
       "n": 5,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1009,
       "early": 1006,
       "late": 1009,
       "n": 5,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1029,
       "early": 1026,
       "late": 1032,
       "n": 5,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1048,
       "early": 1047,
       "late": 1054,
       "n": 5,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 1071,
       "early": 1067,
       "late": 1077,
       "n": 5,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1089,
       "early": 1086,
       "late": 1093,
       "n": 5,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 1143,
       "early": 1140,
       "late": 1145,
       "n": 5,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1168,
       "early": 1167,
       "late": 1173,
       "n": 5,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1185,
       "early": 1185,
       "late": 1185,
       "n": 4,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1218,
       "early": 1218,
       "late": 1218,
       "n": 4,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1252,
       "early": 1252,
       "late": 1252,
       "n": 4,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1290,
       "early": 1290,
       "late": 1290,
       "n": 4,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1324,
       "early": 1324,
       "late": 1324,
       "n": 4,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1337,
       "early": 1337,
       "late": 1343,
       "n": 3,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1354,
       "early": 1354,
       "late": 1354,
       "n": 4,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1369,
       "early": 1367,
       "late": 1375,
       "n": 1,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": false
      }
     ]
    }
@@ -2140,378 +2438,432 @@
       "early": 279,
       "late": 282,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 306,
       "early": 306,
       "late": 310,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 324,
       "early": 322,
       "late": 327,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 348,
       "early": 342,
       "late": 342,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 371,
       "early": 370,
       "late": 373,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 390,
       "early": 386,
       "late": 390,
       "n": 10,
-      "q": 0.714
+      "q": 0.714,
+      "claimable": true
      },
      {
       "med": 412,
       "early": 406,
       "late": 406,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 423,
       "early": 421,
       "late": 423,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 440,
       "early": 437,
       "late": 441,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 458,
       "early": 454,
       "late": 459,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 474,
       "early": 468,
       "late": 477,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 492,
       "early": 489,
       "late": 496,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 512,
       "early": 507,
       "late": 515,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 531,
       "early": 528,
       "late": 532,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 548,
       "early": 547,
       "late": 554,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 568,
       "early": 564,
       "late": 570,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 586,
       "early": 585,
       "late": 588,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 617,
       "early": 617,
       "late": 617,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 634,
       "early": 628,
       "late": 640,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 650,
       "early": 650,
       "late": 650,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 673,
       "early": 673,
       "late": 673,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 693,
       "early": 693,
       "late": 693,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 713,
       "early": 719,
       "late": 719,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 731,
       "early": 731,
       "late": 731,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 748,
       "early": 748,
       "late": 748,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 778,
       "early": 777,
       "late": 779,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 798,
       "early": 795,
       "late": 800,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 814,
       "early": 813,
       "late": 816,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 840,
       "early": 834,
       "late": 836,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 860,
       "early": 860,
       "late": 860,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 884,
       "early": 884,
       "late": 889,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 902,
       "early": 902,
       "late": 908,
       "n": 10,
-      "q": 0.7
+      "q": 0.7,
+      "claimable": true
      },
      {
       "med": 920,
       "early": 919,
       "late": 924,
       "n": 10,
-      "q": 0.7
+      "q": 0.7,
+      "claimable": true
      },
      {
       "med": 938,
       "early": 938,
       "late": 942,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 960,
       "early": 957,
       "late": 962,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 980,
       "early": 979,
       "late": 983,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1000,
       "early": 997,
       "late": 1002,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1018,
       "early": 1017,
       "late": 1024,
       "n": 10,
-      "q": 0.556
+      "q": 0.556,
+      "claimable": false
      },
      {
       "med": 1040,
       "early": 1038,
       "late": 1042,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1061,
       "early": 1058,
       "late": 1063,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1079,
       "early": 1078,
       "late": 1083,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 1101,
       "early": 1098,
       "late": 1102,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1118,
       "early": 1116,
       "late": 1121,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1138,
       "early": 1137,
       "late": 1142,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1162,
       "early": 1157,
       "late": 1162,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1182,
       "early": 1179,
       "late": 1183,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1208,
       "early": 1205,
       "late": 1205,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1228,
       "early": 1223,
       "late": 1223,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 1250,
       "early": 1244,
       "late": 1244,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 1278,
       "early": 1278,
       "late": 1278,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1289,
       "early": 1289,
       "late": 1290,
       "n": 3,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1302,
       "early": 1302,
       "late": 1302,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1315,
       "early": 1313,
       "late": 1317,
       "n": 15,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1341,
       "early": 1340,
       "late": 1341,
       "n": 2,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": false
      }
     ]
    },
@@ -2523,238 +2875,272 @@
       "early": 279,
       "late": 281,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 338,
       "early": 332,
       "late": 339,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 377,
       "early": 383,
       "late": 383,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 405,
       "early": 400,
       "late": 410,
       "n": 10,
-      "q": 0.167
+      "q": 0.167,
+      "claimable": false
      },
      {
       "med": 434,
       "early": 431,
       "late": 437,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 462,
       "early": 459,
       "late": 464,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 497,
       "early": 493,
       "late": 498,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 530,
       "early": 528,
       "late": 531,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 566,
       "early": 561,
       "late": 566,
       "n": 10,
-      "q": 0.4
+      "q": 0.4,
+      "claimable": false
      },
      {
       "med": 601,
       "early": 595,
       "late": 605,
       "n": 10,
-      "q": 0.625
+      "q": 0.625,
+      "claimable": true
      },
      {
       "med": 635,
       "early": 630,
       "late": 636,
       "n": 10,
-      "q": 0.333
+      "q": 0.333,
+      "claimable": false
      },
      {
       "med": 670,
       "early": 664,
       "late": 671,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 704,
       "early": 701,
       "late": 707,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 742,
       "early": 736,
       "late": 743,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 775,
       "early": 771,
       "late": 777,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 810,
       "early": 809,
       "late": 810,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 847,
       "early": 847,
       "late": 850,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 884,
       "early": 883,
       "late": 887,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 933,
       "early": 927,
       "late": 939,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 968,
       "early": 973,
       "late": 973,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 999,
       "early": 1001,
       "late": 1001,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1038,
       "early": 1038,
       "late": 1038,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1072,
       "early": 1077,
       "late": 1077,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 1126,
       "early": 1120,
       "late": 1126,
       "n": 9,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1148,
       "early": 1144,
       "late": 1150,
       "n": 3,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 1161,
       "early": 1159,
       "late": 1161,
       "n": 14,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1186,
       "early": 1184,
       "late": 1186,
       "n": 3,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1200,
       "early": 1195,
       "late": 1203,
       "n": 6,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1222,
       "early": 1221,
       "late": 1224,
       "n": 2,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": false
      },
      {
       "med": 1239,
       "early": 1234,
       "late": 1234,
       "n": 6,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 1258,
       "early": 1252,
       "late": 1264,
       "n": 2,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": false
      },
      {
       "med": 1280,
       "early": 1280,
       "late": 1280,
       "n": 6,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1318,
       "early": 1318,
       "late": 1318,
       "n": 2,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1340,
       "early": 1337,
       "late": 1340,
       "n": 1,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": false
      }
     ]
    }
@@ -2768,245 +3154,280 @@
       "early": 310,
       "late": 312,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 350,
       "early": 350,
       "late": 353,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 374,
       "early": 371,
       "late": 375,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 413,
       "early": 413,
       "late": 419,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 444,
       "early": 438,
       "late": 450,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 480,
       "early": 480,
       "late": 484,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 500,
       "early": 498,
       "late": 505,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 528,
       "early": 526,
       "late": 529,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 555,
       "early": 554,
       "late": 560,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 584,
       "early": 583,
       "late": 586,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 614,
       "early": 612,
       "late": 616,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 644,
       "early": 642,
       "late": 650,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 684,
       "early": 682,
       "late": 688,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 715,
       "early": 712,
       "late": 715,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 743,
       "early": 742,
       "late": 746,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 774,
       "early": 770,
       "late": 775,
       "n": 10,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": true
      },
      {
       "med": 806,
       "early": 801,
       "late": 807,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 835,
       "early": 831,
       "late": 836,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 866,
       "early": 862,
       "late": 868,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 896,
       "early": 892,
       "late": 897,
       "n": 10,
-      "q": 0.556
+      "q": 0.556,
+      "claimable": false
      },
      {
       "med": 926,
       "early": 922,
       "late": 928,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 954,
       "early": 950,
       "late": 955,
       "n": 10,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 986,
       "early": 983,
       "late": 987,
       "n": 9,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1015,
       "early": 1011,
       "late": 1019,
       "n": 9,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1054,
       "early": 1050,
       "late": 1057,
       "n": 9,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1097,
       "early": 1093,
       "late": 1098,
       "n": 9,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1133,
       "early": 1130,
       "late": 1137,
       "n": 9,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1193,
       "early": 1190,
       "late": 1197,
       "n": 9,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 1206,
       "early": 1206,
       "late": 1206,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1236,
       "early": 1236,
       "late": 1236,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1266,
       "early": 1264,
       "late": 1264,
       "n": 8,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1298,
       "early": 1298,
       "late": 1298,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1323,
       "early": 1323,
       "late": 1323,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1332,
       "early": 1331,
       "late": 1334,
       "n": 5,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1362,
       "early": 1361,
       "late": 1365,
       "n": 5,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      }
     ]
    },
@@ -3018,231 +3439,264 @@
       "early": 309,
       "late": 315,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 360,
       "early": 360,
       "late": 360,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 400,
       "early": 400,
       "late": 402,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 433,
       "early": 432,
       "late": 438,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 464,
       "early": 461,
       "late": 467,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 493,
       "early": 492,
       "late": 499,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 524,
       "early": 521,
       "late": 527,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 556,
       "early": 551,
       "late": 558,
       "n": 10,
-      "q": 0.857
+      "q": 0.857,
+      "claimable": true
      },
      {
       "med": 587,
       "early": 583,
       "late": 589,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 614,
       "early": 611,
       "late": 618,
       "n": 10,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 664,
       "early": 664,
       "late": 664,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 700,
       "early": 700,
       "late": 700,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 751,
       "early": 746,
       "late": 756,
       "n": 10,
-      "q": 0.125
+      "q": 0.125,
+      "claimable": false
      },
      {
       "med": 785,
       "early": 785,
       "late": 785,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 818,
       "early": 818,
       "late": 818,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 854,
       "early": 854,
       "late": 854,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 913,
       "early": 913,
       "late": 916,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 943,
       "early": 942,
       "late": 944,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 976,
       "early": 970,
       "late": 978,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 1014,
       "early": 1010,
       "late": 1018,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1054,
       "early": 1050,
       "late": 1058,
       "n": 10,
-      "q": 0.7
+      "q": 0.7,
+      "claimable": true
      },
      {
       "med": 1092,
       "early": 1090,
       "late": 1096,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1134,
       "early": 1131,
       "late": 1138,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 1175,
       "early": 1171,
       "late": 1175,
       "n": 9,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 1213,
       "early": 1212,
       "late": 1218,
       "n": 9,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 1226,
       "early": 1225,
       "late": 1225,
       "n": 8,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1272,
       "early": 1270,
       "late": 1277,
       "n": 8,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1302,
       "early": 1300,
       "late": 1304,
       "n": 8,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1312,
       "early": 1309,
       "late": 1316,
       "n": 1,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": false
      },
      {
       "med": 1322,
       "early": 1316,
       "late": 1316,
       "n": 2,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 1332,
       "early": 1330,
       "late": 1338,
       "n": 11,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 1346,
       "early": 1346,
       "late": 1346,
       "n": 6,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1361,
       "early": 1359,
       "late": 1364,
       "n": 1,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": false
      }
     ]
    }
@@ -3256,210 +3710,240 @@
       "early": 329,
       "late": 334,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 362,
       "early": 357,
       "late": 367,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 392,
       "early": 386,
       "late": 392,
       "n": 10,
-      "q": 0.625
+      "q": 0.625,
+      "claimable": true
      },
      {
       "med": 422,
       "early": 416,
       "late": 426,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 458,
       "early": 454,
       "late": 463,
       "n": 10,
-      "q": 0.429
+      "q": 0.429,
+      "claimable": false
      },
      {
       "med": 506,
       "early": 506,
       "late": 506,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 539,
       "early": 540,
       "late": 540,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 568,
       "early": 568,
       "late": 568,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 618,
       "early": 618,
       "late": 624,
       "n": 10,
-      "q": 0.625
+      "q": 0.625,
+      "claimable": true
      },
      {
       "med": 654,
       "early": 653,
       "late": 660,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 690,
       "early": 687,
       "late": 695,
       "n": 10,
-      "q": 0.571
+      "q": 0.571,
+      "claimable": false
      },
      {
       "med": 724,
       "early": 722,
       "late": 727,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 760,
       "early": 756,
       "late": 763,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 794,
       "early": 794,
       "late": 797,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 828,
       "early": 827,
       "late": 834,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 860,
       "early": 855,
       "late": 864,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 890,
       "early": 890,
       "late": 894,
       "n": 10,
-      "q": 0.556
+      "q": 0.556,
+      "claimable": false
      },
      {
       "med": 923,
       "early": 921,
       "late": 928,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 954,
       "early": 954,
       "late": 960,
       "n": 10,
-      "q": 0.7
+      "q": 0.7,
+      "claimable": true
      },
      {
       "med": 988,
       "early": 986,
       "late": 993,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 1021,
       "early": 1018,
       "late": 1027,
       "n": 10,
-      "q": 0.625
+      "q": 0.625,
+      "claimable": true
      },
      {
       "med": 1056,
       "early": 1055,
       "late": 1062,
       "n": 10,
-      "q": 0.556
+      "q": 0.556,
+      "claimable": false
      },
      {
       "med": 1090,
       "early": 1088,
       "late": 1094,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 1127,
       "early": 1123,
       "late": 1133,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 1164,
       "early": 1159,
       "late": 1170,
       "n": 10,
-      "q": 0.778
+      "q": 0.778,
+      "claimable": true
      },
      {
       "med": 1195,
       "early": 1193,
       "late": 1200,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 1252,
       "early": 1248,
       "late": 1257,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 1302,
       "early": 1296,
       "late": 1302,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1371,
       "early": 1368,
       "late": 1374,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1395,
       "early": 1394,
       "late": 1396,
       "n": 5,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      }
     ]
    },
@@ -3471,154 +3955,176 @@
       "early": 371,
       "late": 374,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 414,
       "early": 412,
       "late": 415,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 466,
       "early": 465,
       "late": 467,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 512,
       "early": 510,
       "late": 513,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 554,
       "early": 549,
       "late": 557,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 608,
       "early": 606,
       "late": 611,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 664,
       "early": 660,
       "late": 668,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 722,
       "early": 718,
       "late": 723,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 774,
       "early": 771,
       "late": 780,
       "n": 10,
-      "q": 0.875
+      "q": 0.875,
+      "claimable": true
      },
      {
       "med": 829,
       "early": 823,
       "late": 830,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 882,
       "early": 879,
       "late": 885,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 936,
       "early": 930,
       "late": 940,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 991,
       "early": 986,
       "late": 994,
       "n": 10,
-      "q": 0.4
+      "q": 0.4,
+      "claimable": false
      },
      {
       "med": 1066,
       "early": 1066,
       "late": 1066,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1118,
       "early": 1118,
       "late": 1118,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1174,
       "early": 1174,
       "late": 1174,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1231,
       "early": 1226,
       "late": 1237,
       "n": 3,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1246,
       "early": 1245,
       "late": 1245,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1280,
       "early": 1277,
       "late": 1280,
       "n": 3,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1292,
       "early": 1292,
       "late": 1292,
       "n": 6,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1308,
       "early": 1304,
       "late": 1313,
       "n": 8,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1359,
       "early": 1357,
       "late": 1364,
       "n": 3,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      }
     ]
    }
@@ -3632,266 +4138,304 @@
       "early": 290,
       "late": 291,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 329,
       "early": 327,
       "late": 330,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 364,
       "early": 363,
       "late": 366,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 388,
       "early": 385,
       "late": 388,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 416,
       "early": 416,
       "late": 416,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 437,
       "early": 437,
       "late": 437,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 460,
       "early": 460,
       "late": 460,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 488,
       "early": 488,
       "late": 488,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 518,
       "early": 518,
       "late": 518,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 548,
       "early": 548,
       "late": 548,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 580,
       "early": 580,
       "late": 580,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 610,
       "early": 610,
       "late": 610,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 660,
       "early": 657,
       "late": 663,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 694,
       "early": 694,
       "late": 696,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 744,
       "early": 744,
       "late": 744,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 776,
       "early": 776,
       "late": 776,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 806,
       "early": 806,
       "late": 806,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 834,
       "early": 834,
       "late": 834,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 864,
       "early": 864,
       "late": 864,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 888,
       "early": 884,
       "late": 884,
       "n": 10,
-      "q": 0.0
+      "q": 0.0,
+      "claimable": false
      },
      {
       "med": 914,
       "early": 914,
       "late": 914,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 955,
       "early": 954,
       "late": 961,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 983,
       "early": 979,
       "late": 986,
       "n": 18,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1012,
       "early": 1009,
       "late": 1015,
       "n": 8,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1052,
       "early": 1052,
       "late": 1052,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1084,
       "early": 1084,
       "late": 1084,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1114,
       "early": 1114,
       "late": 1114,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1148,
       "early": 1148,
       "late": 1148,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1178,
       "early": 1178,
       "late": 1178,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1209,
       "early": 1209,
       "late": 1209,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1242,
       "early": 1242,
       "late": 1242,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1267,
       "early": 1267,
       "late": 1267,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1288,
       "early": 1288,
       "late": 1288,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1310,
       "early": 1310,
       "late": 1310,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1320,
       "early": 1317,
       "late": 1324,
       "n": 7,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      },
      {
       "med": 1332,
       "early": 1332,
       "late": 1332,
       "n": 6,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1340,
       "early": 1340,
       "late": 1341,
       "n": 4,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1361,
       "early": 1359,
       "late": 1362,
       "n": 3,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      }
     ]
    },
@@ -3903,182 +4447,208 @@
       "early": 290,
       "late": 292,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 323,
       "early": 319,
       "late": 324,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 388,
       "early": 382,
       "late": 390,
       "n": 10,
-      "q": 0.833
+      "q": 0.833,
+      "claimable": true
      },
      {
       "med": 423,
       "early": 421,
       "late": 427,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 466,
       "early": 464,
       "late": 471,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 516,
       "early": 513,
       "late": 517,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 565,
       "early": 563,
       "late": 571,
       "n": 10,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 616,
       "early": 613,
       "late": 619,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 668,
       "early": 668,
       "late": 673,
       "n": 10,
-      "q": 0.444
+      "q": 0.444,
+      "claimable": false
      },
      {
       "med": 720,
       "early": 716,
       "late": 724,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 772,
       "early": 771,
       "late": 775,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 825,
       "early": 821,
       "late": 827,
       "n": 10,
-      "q": 0.75
+      "q": 0.75,
+      "claimable": true
      },
      {
       "med": 876,
       "early": 875,
       "late": 882,
       "n": 10,
-      "q": 0.667
+      "q": 0.667,
+      "claimable": true
      },
      {
       "med": 928,
       "early": 925,
       "late": 929,
       "n": 10,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 972,
       "early": 966,
       "late": 974,
       "n": 10,
-      "q": 0.6
+      "q": 0.6,
+      "claimable": true
      },
      {
       "med": 1032,
       "early": 1027,
       "late": 1030,
       "n": 10,
-      "q": 0.5
+      "q": 0.5,
+      "claimable": false
      },
      {
       "med": 1082,
       "early": 1082,
       "late": 1082,
       "n": 10,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1105,
       "early": 1100,
       "late": 1110,
       "n": 9,
-      "q": 0.444
+      "q": 0.444,
+      "claimable": false
      },
      {
       "med": 1193,
       "early": 1193,
       "late": 1197,
       "n": 9,
-      "q": 0.889
+      "q": 0.889,
+      "claimable": true
      },
      {
       "med": 1240,
       "early": 1238,
       "late": 1240,
       "n": 9,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1259,
       "early": 1259,
       "late": 1259,
       "n": 8,
-      "q": 0
+      "q": 0,
+      "claimable": false
      },
      {
       "med": 1273,
       "early": 1270,
       "late": 1279,
       "n": 5,
-      "q": 0.8
+      "q": 0.8,
+      "claimable": true
      },
      {
       "med": 1280,
       "early": 1279,
       "late": 1282,
       "n": 7,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1300,
       "early": 1297,
       "late": 1303,
       "n": 4,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1330,
       "early": 1330,
       "late": 1332,
       "n": 3,
-      "q": 1.0
+      "q": 1.0,
+      "claimable": true
      },
      {
       "med": 1362,
       "early": 1358,
       "late": 1363,
       "n": 4,
-      "q": 0.9
+      "q": 0.9,
+      "claimable": true
      }
     ]
    }

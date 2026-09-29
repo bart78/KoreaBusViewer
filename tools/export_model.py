@@ -11,6 +11,10 @@ Each slot carries:
           late' holds for every observed day (add a margin for unseen days)
   n     - days with an arrival near this slot
   q     - slot quality (fraction of those days within +/-3 min)
+  claimable - n >= 3 AND q >= 0.60: the ONLY slots a consumer may show.
+          Never claim a slot with claimable=false (show '--' instead) —
+          thin slots (n=1) and loose slots (q<0.60) are the model's
+          admission of ignorance.
 
 Consumers should claim only slots with q >= 0.60 (the board's own gate) and
 show '--' otherwise. Day-type: weekday vs weekend+holiday (holidays observed
@@ -64,7 +68,7 @@ def main():
         'stop': 'GGB206000648',
         'exported': (datetime.datetime.now(datetime.timezone.utc)
                      + datetime.timedelta(hours=9)).strftime('%Y-%m-%dT%H:%M+09:00'),
-        'model_through': str(max(d for d, _, _ in days)),
+        'model_through': str(max(d for d, _, _ in days if d < today)),
         'holidays_observed': sorted(d.strftime('%Y-%m-%d') for d in holidays),
         'routes': {},
     }
@@ -89,7 +93,8 @@ def main():
                 late = max(samples) if samples else med
                 q = model.slot_quality(dt, med)
                 sl.append({'med': med, 'early': early, 'late': late,
-                           'n': n, 'q': round(q, 3)})
+                           'n': n, 'q': round(q, 3),
+                           'claimable': n >= 3 and q >= 0.60})
             rt[DT_NAME[dt]] = {
                 'conf': round(model.confidence(dt), 3),
                 'slots': sl,
