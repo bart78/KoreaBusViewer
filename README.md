@@ -123,6 +123,8 @@ Where the learner's value shows, and the static cannot follow:
 
 The honest summary: if you have an accurate, stable timetable and a patient hand to encode it, a headway model is genuinely good — the project's premise was never "schedules are worthless", it was "schedules are good *when they're right*, and they're wrong more often than anyone admits". The board shows the learned values only because they adapt and can be trusted to say `--` when they cannot answer.
 
+And the scale matters: a one-minute median improvement is the difference between making a bus and watching it leave. The countdowns on the board inherit the ring's accuracy directly — every learned second counted is a second closer to reality than the schedule's guess. Whether that edge is "optimization for the sake of optimization" is for the person standing at the stop to decide.
+
 Per-route confidence (28 weekday days in the ring's history): 32 → 0.70, 73 → 0.67, 310 → 0.75, 340 → 0.90, 4103 → 0.84, 9409 → 0.72, 9507 → 0.84.
 
 **Slot-level gating (per-slot quality ≥ 0.60)** is the largest single accuracy lever: on the same 4,729 held-out arrivals, claims that pass the slot gate land at **median 2 min, 68% ≤3 min, 81% ≤5 min** (n=2,657) versus 4 min / 44% / 59% for all slots. Withholding the loose slots buys a 2× median-error improvement on what remains.
