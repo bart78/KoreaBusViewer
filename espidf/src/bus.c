@@ -759,6 +759,8 @@ static void health_bump(int field) {   // 0 = boot, 1 = fetch fail, 2 = fetch ok
     struct tm t;
     localtime_r(&now, &t);
     if (!log_nvs) return;
+    if (t.tm_year < 100) return;   // clock not SNTP-synced yet (epoch) —
+                                   // the day key would be meaningless
     char key[16];
     snprintf(key, sizeof(key), "h%04d%02d%02d", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday);
     int32_t v[3] = {0, 0, -1};
