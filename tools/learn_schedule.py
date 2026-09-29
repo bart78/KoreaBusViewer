@@ -80,6 +80,13 @@ class RouteModel:
         arrivals = dedupe(arrivals)
         if not arrivals:
             return
+        ring = self.ring[daytype]
+        if len(ring) >= 3:  # MIN_RING: need a reference to judge against
+            # completeness gate: a partial day (board unplugged, capture
+            # gap) cannot be ordinally aligned — its few arrivals land in
+            # arbitrary columns and skew every slot's median
+            if len(arrivals) < MIN_DAY_FRAC * statistics.median(len(d) for d in ring):
+                return
         shifted, gated = self.score_day(self.ring[daytype], arrivals)
         if shifted:
             self.anomaly_days += 1

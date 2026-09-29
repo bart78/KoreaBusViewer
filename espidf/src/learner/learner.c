@@ -97,6 +97,24 @@ void learner_learn_day(learner_t* l, int daytype, const int* arrivals, int n) {
 
     learner_ring_t* ring = &l->ring[daytype];
 
+    /* dedupe the input first so the gate and the ring see the same count */
+    learner_day_t in;
+    in.n = n;
+    memcpy(in.arr, arrivals, n * sizeof(int));
+    day_dedupe(&in);
+    n = in.n;
+
+    /* completeness gate: a partial day (board unplugged, capture gap)
+     * cannot be ordinally aligned — its few arrivals land in arbitrary
+     * columns and skew every slot's median. Skip it once the ring has a
+     * reference to judge against. */
+    if (ring->n_days >= LEARNER_MIN_RING) {
+        int lens[LEARNER_RING_DAYS];
+        for (int i = 0; i < ring->n_days; i++) lens[i] = ring->days[i].n;
+        int med_len = median_int(lens, ring->n_days);
+        if (n < LEARNER_MIN_DAY_FRAC * med_len) return;
+    }
+
     if (shifted_vs_ring(ring, arrivals, n))
         l->anomaly_days++;
     else
@@ -109,9 +127,7 @@ void learner_learn_day(learner_t* l, int daytype, const int* arrivals, int n) {
         ring->n_days = LEARNER_RING_DAYS - 1;
     }
     learner_day_t* d = &ring->days[ring->n_days++];
-    d->n = n;
-    memcpy(d->arr, arrivals, n * sizeof(int));
-    day_dedupe(d);
+    *d = in;
 }
 
 int learner_score_day(learner_t* l, int daytype, const int* arrivals, int n) {

@@ -6,7 +6,7 @@ An ESP32-S3 signboard for a single Korean bus stop that shows **live arrival cou
 
 - One board, one stop (STOP 07593, Seongnam/Gyeonggi), seven routes (32, 73, 310, 340, 4103, 9409, 9507). Live data from two government APIs (GBIS + TAGO), merged; a static schedule and an **on-device learner** as fallbacks.
 - The board logs every arrival it witnesses to flash (60 days). At boot, a portable, dependency-free C learner rebuilds per-route **arrival rings** from that log and, when the feed is silent, shows learned predictions — **only when confident, otherwise an honest `--`**.
-- Held-out validation (leave-one-out across 9 full days, 2,995 logged arrivals): the learned ring beats the static headway model on every metric — **median 4 vs 5 min, 59% vs 53% within ±5 min**. With **per-slot quality gating**, the claims the board actually shows land at **median 2 min, 81% within ±5 min** — the loose slots withhold themselves instead of eroding trust.
+- Held-out validation (leave-one-out across 21 full weekdays, 4,729 logged arrivals): the learned ring beats the static headway model on every metric — **median 4 vs 5 min, 59% vs 53% within ±5 min**. With **per-slot quality gating**, the claims the board actually shows land at **median 2 min, 81% within ±5 min** — the loose slots withhold themselves instead of eroding trust.
 - Everything — logging, learning, display, honesty rules — runs on the board. No server, no account, no phone required.
 
 ## 2. Background & Motivation
@@ -94,24 +94,24 @@ Per route × day-type, the learner keeps the last 10 days of **confirmed arrival
 
 ## 6. Results
 
-### 6.1 Held-out validation (leave-one-out, 3 full days, 953 arrivals)
+### 6.1 Held-out validation (leave-one-out, 21 full weekdays, 4,729 arrivals)
 
-For each of three held-out weekdays, the ring was rebuilt from the other six weekdays and scored against that day's logged arrivals — the same exclusion rule the board itself uses (the current day never enters its own ring).
+For each held-out weekday, the ring was rebuilt from the other weekdays (10-day cap) and scored against that day's logged arrivals — the same exclusion rule the board itself uses (the current day never enters its own ring).
 
 | | Learned ring | Static headway model |
 |---|---|---|
 | Median error | **4 min** | 5 min |
 | ≤ ±3 min | **46%** | 34% |
-| ≤ ±5 min | **61%** | 53% |
+| ≤ ±5 min | **59%** | 53% |
 | ≤ ±10 min | 84% | 84% |
-
-Per held-out day: 08/24 median 4 min (65% ≤5m) · 08/25 median 4 min (63%) · 08/26 median 5 min (55%).
 
 The trajectory matters as much as the snapshot: with only 4 ring days, the static model's dense grid won the raw average (median 3 vs 5 min). At 6–7 ring days, the learned ring leads on every metric. Meanwhile the static model's error is bounded by half a headway *by construction* and it cannot improve — the ring improves with every day it lives.
 
-Per-route confidence after 9 weekday days: 32 → 0.80, 73 → 0.80, 310 → 0.76, 340 → 0.87, 4103 → 0.81, 9409 → 0.66, 9507 → 0.86.
+Per-route confidence (28 weekday days in the ring's history): 32 → 0.70, 73 → 0.67, 310 → 0.75, 340 → 0.90, 4103 → 0.84, 9409 → 0.72, 9507 → 0.84.
 
-**Slot-level gating (per-slot quality ≥ 0.60)** is the largest single accuracy lever: on the same 2,995 held-out arrivals, claims that pass the slot gate land at **median 2 min, 66% ≤3 min, 81% ≤5 min** (n=1,658) versus 4 min / 44% / 59% for all slots. Withholding the loose slots costs ~45% of claims and buys a 2× median-error improvement on what remains.
+**Slot-level gating (per-slot quality ≥ 0.60)** is the largest single accuracy lever: on the same 4,729 held-out arrivals, claims that pass the slot gate land at **median 2 min, 68% ≤3 min, 81% ≤5 min** (n=2,657) versus 4 min / 44% / 59% for all slots. Withholding the loose slots buys a 2× median-error improvement on what remains.
+
+**Partial-day gate**: a day with fewer than 60% of the ring's median arrival count (board unplugged, capture gap) is excluded at learn time — its few arrivals cannot be ordinally aligned and skewed every slot's median. Without the gate, half-days (9/14–15, 9/21, 9/23) pushed held-out ≤5 min accuracy from ~80% to ~45% for a week at a time; with it, every held-out day sits at 76–86%.
 
 ### 6.2 Field observations (live, one morning)
 
