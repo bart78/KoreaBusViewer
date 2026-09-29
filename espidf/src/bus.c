@@ -196,6 +196,10 @@ static lv_obj_t* time2_labels[N_ROWS];
 
 static time_t kst_now(void) { return time(NULL) + 9 * 3600; }
 
+static nvs_handle_t log_nvs;   // forward: opened later, used by health_bump
+
+static void health_bump(int field);   // daily boots/fetch-fail/last-ok marker
+
 static void fmt_secs(int s, char* out, size_t n) {
     if (s <= 0) { snprintf(out, n, "ARRIVING"); return; }
     snprintf(out, n, "%02dm %02ds", s / 60, s % 60);
@@ -560,10 +564,12 @@ static void fetch_arrivals(void) {
     ok |= fetch_tago();
     if (!ok) {
         fetch_fail++;
+        health_bump(1);
         ESP_LOGW(TAG, "both feeds failed #%d (keeping last data)", fetch_fail);
         return;
     }
     fetch_fail = 0;
+    health_bump(2);
 
     time_t now = kst_now();
     int applied = 0;
@@ -740,6 +746,32 @@ static void fetch_arrivals(void) {
     }
     last_good = now;
     ESP_LOGI(TAG, "live: %d routes, %d pending entries", applied, pend_n);
+}
+
+// ---- daily health marker ----
+// persists per day: [boots, fetch-fails, last-ok minute]. Diagnoses silent
+// days from a flash dump: boots>1 = reboot pattern, boots=1 with a late
+// first event = network/power gap before the first ok, zero boots = the
+// board never started. The ok-minute persists once per hour (NVS wear).
+static void health_bump(int field) {   // 0 = boot, 1 = fetch fail, 2 = fetch ok
+    time_t now = kst_now();
+    struct tm t;
+    localtime_r(&now, &t);
+    if (!log_nvs) return;
+    char key[16];
+    snprintf(key, sizeof(key), "h%04d%02d%02d", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday);
+    int32_t v[3] = {0, 0, -1};
+    size_t len = sizeof(v);
+    if (nvs_get_blob(log_nvs, key, v, &len) != ESP_OK) len = sizeof(v);
+    if (field == 0) v[0]++;
+    else if (field == 1) v[1]++;
+    else {
+        int hm = t.tm_hour * 60 + t.tm_min;
+        if (hm / 60 == v[2] / 60) return;   // already persisted this hour
+        v[2] = hm;
+    }
+    nvs_set_blob(log_nvs, key, v, sizeof(v));
+    nvs_commit(log_nvs);
 }
 
 // ---- arrival logging (NVS, one blob per day) ----
@@ -1761,6 +1793,7 @@ void app_main(void) {
 
     wifi_init();
     log_init();
+    health_bump(0);   // boot marker: a silent day with no marker = no boot
     learners = heap_caps_malloc(N_ROWS * sizeof(learner_t), MALLOC_CAP_SPIRAM);
     learn_conf = heap_caps_malloc(N_ROWS * LEARNER_MAX_ARR * sizeof(int), MALLOC_CAP_SPIRAM);
     learn_confn = heap_caps_malloc(N_ROWS * sizeof(int), MALLOC_CAP_SPIRAM);

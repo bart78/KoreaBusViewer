@@ -127,6 +127,19 @@ def main(path):
                   + (f' phantom@' + ','.join(fmt(m) for m in ph[:8]) if ph else ''))
 
     print()
+    print('=== Daily health (boots / fetch-fails / last-ok) ===')
+    print('A day with few events but boots=1 and a late last-ok means the board')
+    print('was up but the network was not; boots>1 = reboot pattern.')
+    for k, blob in sorted(blobs.items()):
+        if k[0] != 4 or not k[1].startswith('h'):
+            continue
+        v = blob
+        if len(v) >= 12:
+            boots, fails, ok = [int.from_bytes(v[i:i+4], 'little', signed=True) for i in (0, 4, 8)]
+            hh = f'{ok // 60:02d}:{ok % 60:02d}' if ok >= 0 else '-'
+            print(f'{k[1]}: boots={boots} fetch_fails={fails} last_ok={hh}')
+
+    print()
     print('=== Capture health (per day, per route: confirmed/predicted) ===')
     print('A route whose predicted:confirmed ratio is high loses ground truth:')
     print('the board saw the buses approaching but could not prove the passes.')
