@@ -6,6 +6,9 @@ Each slot carries:
   med   - the expected arrival (minute of day) — the ring's median
   early - the earliest observed arrival near this slot: the conservative
           'leave by' bound for catching the bus (apply your own margin)
+  late  - the latest observed arrival near this slot: together with early
+          this is the deterministic window — 'arrives between early and
+          late' holds for every observed day (add a margin for unseen days)
   n     - days with an arrival near this slot
   q     - slot quality (fraction of those days within +/-3 min)
 
@@ -83,8 +86,10 @@ def main():
             for med, n in slots:
                 samples = slot_samples(model, dt, med)
                 early = min(samples) if samples else med
+                late = max(samples) if samples else med
                 q = model.slot_quality(dt, med)
-                sl.append({'med': med, 'early': early, 'n': n, 'q': round(q, 3)})
+                sl.append({'med': med, 'early': early, 'late': late,
+                           'n': n, 'q': round(q, 3)})
             rt[DT_NAME[dt]] = {
                 'conf': round(model.confidence(dt), 3),
                 'slots': sl,
