@@ -110,7 +110,16 @@ For each held-out weekday, the ring was rebuilt from the other weekdays (10-day 
 | ≤ ±5 min | **59%** | 53% |
 | ≤ ±10 min | 84% | 84% |
 
-The trajectory matters as much as the snapshot: with only 4 ring days, the static model's dense grid won the raw average (median 3 vs 5 min). At 6–7 ring days, the learned ring leads on every metric. Meanwhile the static model's error is bounded by half a headway *by construction* and it cannot improve — the ring improves with every day it lives.
+The trajectory matters as much as the snapshot: with only 4 ring days, the static model's dense grid won the raw average (median 3 vs 5 min). At 6–7 ring days, the learned ring leads on every metric — modestly, and that modest lead deserves honest context. The static model is not a strawman: it is the *actual timetable* encoded as a grid, tuned per route (headways, first/last buses, ride times) — the strongest baseline available, and its error is bounded by half a headway by construction. The learner matches it with **zero schedule knowledge** — it reconstructs the same pattern purely from what it has seen arrive, with no headways, no timetable, no route metadata.
+
+Where the learner's value shows, and the static cannot follow:
+
+1. **The gate** — the learned claims that actually reach the display land within ±5 min **87% of the time**, versus the static's 53%: the learner withholds its loose guesses, the static cannot.
+2. **Honesty** — the static happily claims an 11 pm bus that never ran; the learner never claims what it has not witnessed.
+3. **Adaptivity** — the static assumes the schedule it was configured with forever (the September timetable change would silently degrade it); the ring tracks the last 10 days of reality.
+4. **Self-sufficiency** — a new stop needs only the board and time; the static needs the schedule configured by hand.
+
+The honest summary: if you have an accurate, stable timetable and a patient hand to encode it, a headway model is genuinely good — the project's premise was never "schedules are worthless", it was "schedules are good *when they're right*, and they're wrong more often than anyone admits". The board shows the learned values only because they adapt and can be trusted to say `--` when they cannot answer.
 
 Per-route confidence (28 weekday days in the ring's history): 32 → 0.70, 73 → 0.67, 310 → 0.75, 340 → 0.90, 4103 → 0.84, 9409 → 0.72, 9507 → 0.84.
 
