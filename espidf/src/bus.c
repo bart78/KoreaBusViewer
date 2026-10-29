@@ -787,6 +787,8 @@ static void health_bump(int field) {   // 0 = boot, 1 = fetch fail, 2 = fetch ok
 static nvs_handle_t log_nvs;
 static int log_full;
 
+static void log_prune(void);   // forward: used by log_init and the daily prune
+
 static void log_init(void) {
     esp_err_t err = nvs_open("buslog", NVS_READWRITE, &log_nvs);
     if (err != ESP_OK) {
@@ -794,7 +796,17 @@ static void log_init(void) {
         ESP_LOGW(TAG, "nvs open failed %s", esp_err_to_name(err));
         return;
     }
-    // drop blobs older than LOG_DAYS_KEEP
+    log_prune();
+    ESP_LOGI(TAG, "arrival log ready (keeps %d days)", LOG_DAYS_KEEP);
+}
+
+// drop blobs older than LOG_DAYS_KEEP. Runs at boot AND once per day at the
+// night transition: a long-running board never rebooted, so the old
+// boot-only prune let 76 days accumulate, filled the NVS partition, and
+// silently truncated whole days mid-morning (the growing day-blob rewrites
+// ran out of contiguous space; logging stalled until GC clawed space back).
+static void log_prune(void) {
+    if (!log_nvs) return;
     time_t cutoff_ts = kst_now() - LOG_DAYS_KEEP * 86400;
     struct tm ct;
     localtime_r(&cutoff_ts, &ct);
@@ -811,7 +823,6 @@ static void log_init(void) {
     }
     nvs_release_iterator(it);
     nvs_commit(log_nvs);
-    ESP_LOGI(TAG, "arrival log ready (keeps %d days)", LOG_DAYS_KEEP);
 }
 
 // event = (route_idx<<11) | minute_of_day, 2 bytes
@@ -836,8 +847,13 @@ static void log_arrival(int route_idx, time_t arrival_ts, int type) {
     blob[len++] = ev & 0xFF;
     blob[len++] = ev >> 8;
     if (nvs_set_blob(log_nvs, key, blob, len) != ESP_OK) {
-        log_full = 1;
-        return;
+        // likely the partition is at its edge (stale days + the growing
+        // blob): prune and retry once before giving up on this event
+        log_prune();
+        if (nvs_set_blob(log_nvs, key, blob, len) != ESP_OK) {
+            log_full = 1;
+            return;
+        }
     }
     nvs_commit(log_nvs);
     ESP_LOGI(TAG, "logged arrival: route %d at %02d:%02d (%s)",
@@ -1766,6 +1782,17 @@ static void refresh_task(void* arg) {
                     rows[i].jump_pending = 0;
                 }
                 learner_learn_today();   // the day is complete: learn it
+                // once per day: enforce the retention (a never-rebooted
+                // board otherwise fills NVS and truncates days)
+                static int pruned_day = 0;
+                struct tm pt;
+                time_t nowt = kst_now();
+                localtime_r(&nowt, &pt);
+                int pday = (pt.tm_year + 1900) * 10000 + (pt.tm_mon + 1) * 100 + pt.tm_mday;
+                if (pday != pruned_day) {
+                    log_prune();
+                    pruned_day = pday;
+                }
                 if (backlight_on) {
                     bsp_display_brightness_set(0);
                     backlight_on = 0;
